@@ -1,0 +1,107 @@
+/* ==========================================================================
+   Estilização Base da Página (HTML, Body)
+   ========================================================================== */
+html {
+  height: 100%; /* Garante que o body possa usar altura percentual em relação à viewport. */
+}
+
+body {
+  background-color: rgb(25, 29, 59); /* Cor de fundo principal, também controlada via JS. */
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%; /* Ocupa 100% da altura do elemento html. */
+  overflow: hidden; /* Evita barras de rolagem. */
+  color: rgb(230, 226, 190); /* Cor de texto padrão, se não sobrescrita. */
+  /* Adiciona transição para a cor de fundo */
+  transition: background-color 0.5s ease-in-out;
+}
+
+/* ==========================================================================
+   Estilização e Animação dos SVGs de Fundo
+   ========================================================================== */
+.background-svg-animation-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw; /* Ocupa toda a largura da viewport. */
+  height: 100vh; /* Ocupa toda a altura da viewport. */
+  display: flex; 
+  align-items: flex-start; /* Alinha a imagem SVG no topo do container. */
+  justify-content: flex-start; /* Alinha a imagem SVG à esquerda do container. */
+  overflow: hidden; /* Garante que partes da imagem rotacionada fora do container não sejam visíveis. */
+  z-index: -1; /* Coloca este container atrás de todo o conteúdo principal. */
+  /* Configurações para a transição de fade */
+  opacity: 0; /* Por padrão, os fundos estão invisíveis */
+  transition: opacity 0.5s ease-in-out; /* Transição de 0.5s com suavização */
+  pointer-events: none; /* Não interage com o mouse quando invisível */
+}
+
+.background-svg-animation-container.active-background {
+  opacity: 1; /* Torna o fundo ativo visível */
+  pointer-events: auto; /* Permite interação com o mouse (se houver) */
+}
+
+.background-svg-element {
+  width: 800px;
+  height: 800px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%); 
+  transform-origin: center center;
+  animation: rotateBackgroundSVG 120s linear infinite;
+}
+
+/* Animação de rotação para o SVG de fundo. */
+@keyframes rotateBackgroundSVG {
+  from {
+    transform: translate(-48%, -44%) rotate(0deg);
+  }
+  to {
+    transform: translate(-48%, -44%) rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   Estilização do Container de Texto e Elementos de Texto
+   ========================================================================== */
+#text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;     /* Centraliza as linhas de texto horizontalmente */
+  justify-content: center; /* Centraliza o bloco de linhas de texto verticalmente */
+  width: 100%;
+  height: 100%;            /* Ocupa 100% da altura do body */
+  position: relative;      /* Necessário para o z-index funcionar corretamente */
+  z-index: 10;             /* Acima do z-index de #background-svg-animation-container */
+  opacity: 1; /* Texto começa visível */
+  transition: opacity 0.3s ease-in-out; /* Transição para o fade do texto (0.3s) */
+}
+
+.text-line {
+  display: flex;
+  justify-content: center;
+}
+
+.char-span {
+  display: inline-block;
+  font-family: 'Chivo', sans-serif;
+  white-space: pre;
+  /* Adiciona transição para a cor do texto */
+  transition: color 0.5s ease-in-out;
+}
+
+/* ==========================================================================
+   Definições de Fontes (@font-face e classes utilitárias)
+   ========================================================================== */
+@font-face {
+  font-family: 'Fit';
+  src: url('https://www.axis-praxis.org/fonts/webfonts/Fit-VF.woff2');
+}
+
+.chivo {
+  font-family: "Chivo", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
