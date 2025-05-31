@@ -11,9 +11,10 @@
 // # CONFIGURAÇÕES GERAIS DA ANIMAÇÃO E TEXTO
 // -------------------------------------------------------------------------------------
 // Define o conjunto de texto inicial. Será atualizado via MIDI e no setup.
-let textosDasLinhas = [ // Fallback caso a configuração inicial falhe.
+let textosDasLinhas = [
+  // Fallback caso a configuração inicial falhe.
   "Texto",
-  "Padrão"
+  "Padrão",
 ];
 
 let tamanhoFonteDesejado = 90;
@@ -44,62 +45,40 @@ let velocidadeOnda = 0.03;
  * }, // Não se esqueça da vírgula se houver mais objetos depois!
  */
 const textSets = [
-    {
-        note: 32, // Pad para o texto original
-        lines: [
-            "Feira das",
-            "Profissões",
-            "Universidade",
-            "Federal do Ceará"
-        ]
-    }, 
-    {
-        note: 33,
-        lines: [
-            "Projeto",
-            "Paisagens",
-            "Tipográficas",
-            "Interativas"
-        ]
-    }, 
-    { // Novo conjunto de texto adicionado pelo usuário
-        note: 34,
-        lines: [
-            "A tipografia",
-            "está em",
-            "todos os",
-            "lugares"
-        ]
-    } 
+  {
+    note: 32, // Pad para o texto original
+    lines: ["Feira das", "Profissões", "Universidade", "Federal do Ceará"],
+  },
+  {
+    note: 33,
+    lines: ["Projeto", "Paisagens", "Tipográficas", "Interativas"],
+  },
+  {
+    // Novo conjunto de texto adicionado pelo usuário
+    note: 34,
+    lines: ["A tipografia", "está em", "todos os", "lugares"],
+  },
 ];
 
 // -------------------------------------------------------------------------------------
 // # CONFIGURAÇÕES DE FONTES VARIÁVEIS E SELEÇÃO VIA MIDI
 // -------------------------------------------------------------------------------------
 let fontConfigurations = [
-    {
-        name: "Chivo - Animar Peso",
-        fontFamily: "'Chivo', sans-serif",
-        animatedAxes: [
-            { tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: true }
-        ],
-        fixedAxes: [
-            { tag: 'wdth', value: 100 }
-        ]
-    },
-    {
-        name: "Fit - Animar Largura",
-        fontFamily: "'Fit', sans-serif",
-        animatedAxes: [
-            { tag: 'wdth', min: 50, max: 200, useGlobalAxisRanges: true }
-        ],
-        fixedAxes: [
-            { tag: 'wght', value: 400 }
-        ]
-    },
+  {
+    name: "Chivo - Animar Peso",
+    fontFamily: "'Chivo', sans-serif",
+    animatedAxes: [{ tag: "wght", min: 100, max: 900, useGlobalAxisRanges: true }],
+    fixedAxes: [{ tag: "wdth", value: 100 }],
+  },
+  {
+    name: "Fit - Animar Largura",
+    fontFamily: "'Fit', sans-serif",
+    animatedAxes: [{ tag: "wdth", min: 50, max: 200, useGlobalAxisRanges: true }],
+    fixedAxes: [{ tag: "wght", value: 400 }],
+  },
 ];
-let currentFontIndex = 0; 
-let currentFontConfig;    
+let currentFontIndex = 0;
+let currentFontConfig;
 const padNotesForFonts = [16, 17, 18, 19, 20, 21, 22, 23];
 
 let minAxisControlado = 0.0;
@@ -108,43 +87,42 @@ let maxAxisControlado = 1.0;
 // -------------------------------------------------------------------------------------
 // # CONFIGURAÇÕES DOS FUNDOS SVG E SELEÇÃO VIA MIDI
 // -------------------------------------------------------------------------------------
-const padNotesForBackgrounds = [36, 37, 38, 39]; 
-const backgroundContainerIds = [ 
-    "background-svg-container-1", 
-    "background-svg-container-2", 
-    "background-svg-container-3", 
-    "background-svg-container-4"  
+const padNotesForBackgrounds = [36, 37, 38, 39];
+const backgroundContainerIds = [
+  "background-svg-container-1",
+  "background-svg-container-2",
+  "background-svg-container-3",
+  "background-svg-container-4",
 ];
-let currentBackgroundIndex = 0; 
+let currentBackgroundIndex = 0;
 
 // -------------------------------------------------------------------------------------
 // # CONFIGURAÇÕES DE CORES
 // -------------------------------------------------------------------------------------
-let bgColor = [25, 29, 59];       
-let textColor = [230, 226, 190];   
+let bgColor = [25, 29, 59];
+let textColor = [230, 226, 190];
 
 // Cores alvo para notas MIDI específicas
-const targetBgColorNote36 = [102, 102, 153]; 
-const targetTextColorNote36 = [255, 255, 255]; 
+const targetBgColorNote36 = [102, 102, 153];
+const targetTextColorNote36 = [255, 255, 255];
 
-const targetBgColorNote37 = [0, 51, 51];     
-const targetTextColorNote37 = [255, 255, 255]; 
+const targetBgColorNote37 = [0, 51, 51];
+const targetTextColorNote37 = [255, 255, 255];
 
-const targetBgColorNote38 = [204, 153, 51];  
-const targetTextColorNote38 = [255, 255, 255]; 
+const targetBgColorNote38 = [204, 153, 51];
+const targetTextColorNote38 = [255, 255, 255];
 
-const targetBgColorNote39 = [255, 102, 51];  
-const targetTextColorNote39 = [255, 255, 255]; 
+const targetBgColorNote39 = [255, 102, 51];
+const targetTextColorNote39 = [255, 255, 255];
 
-const targetBgColorNote40 = [153, 204, 51];  
-const targetTextColorNote40 = [255, 255, 255]; 
+const targetBgColorNote40 = [153, 204, 51];
+const targetTextColorNote40 = [255, 255, 255];
 
-const targetBgColorNote41 = [102, 102, 102]; 
-const targetTextColorNote41 = [255, 255, 255]; 
+const targetBgColorNote41 = [102, 102, 102];
+const targetTextColorNote41 = [255, 255, 255];
 
-const targetBgColorNote42 = [51, 51, 51];    
-const targetTextColorNote42 = [204, 204, 204]; 
-
+const targetBgColorNote42 = [51, 51, 51];
+const targetTextColorNote42 = [204, 204, 204];
 
 // -------------------------------------------------------------------------------------
 // # VARIÁVEIS DE ESTADO E CONTROLE MIDI
@@ -156,7 +134,7 @@ let midiInputDevice = null;
 let showMidiStatusBox = true;
 let statusBoxPadding = 10;
 let statusBoxTextSize = 12;
-let statusBoxFont = 'Arial, sans-serif';
+let statusBoxFont = "Arial, sans-serif";
 let midiStatusBoxElement;
 
 const TAM_FONTE_DESEJADO_MIN_MIDI = 10;
@@ -165,16 +143,29 @@ const FATOR_ENTRELINHA_MIN_MIDI = 0.7;
 const FATOR_ENTRELINHA_MAX_MIDI = 3.0;
 const VELOCIDADE_ONDA_MIN_MIDI = 0.001;
 const VELOCIDADE_ONDA_MAX_MIDI = 0.15;
-const notaDoPadParaStatusBox = 43; 
+const notaDoPadParaStatusBox = 43;
 
 // -------------------------------------------------------------------------------------
 // # VARIÁVEIS DE ELEMENTOS DOM E ESTADO DO SKETCH
 // -------------------------------------------------------------------------------------
-let spansDasLinhas = [];    
-let textContainer;          
+let spansDasLinhas = [];
+let textContainer;
 let textContainerDOMElement; // Para acesso direto ao DOM element para opacity
-let setupCompleto = false;  
+let setupCompleto = false;
 let isTextChanging = false; // Flag para controlar transição de texto
+
+// --- Variáveis para transição de opacidade ---
+let currentTextOpacity = 1;
+let targetTextOpacity = 1;
+const textFadeDuration = 300; // milissegundos
+
+let currentSvgOpacities = [];
+let targetSvgOpacities = [];
+const svgFadeDuration = 400; // milissegundos
+
+// --- Variáveis para transição automática ---
+let transitionInterval = 5000; // Intervalo de transição em milissegundos (5 segundos)
+let transitionTimer;
 
 // =====================================================================================
 // # FUNÇÃO PRELOAD - Carregamento de Assets p5.js
@@ -191,7 +182,7 @@ function setup() {
   console.log("Setup: Tipografia Interativa com MIDI.");
 
   // --- 1. CONFIGURAÇÃO INICIAL DO TEXTO (Pad Nota 32) ---
-  const initialTextSet = textSets.find(set => set.note === 32);
+  const initialTextSet = textSets.find((set) => set.note === 32);
   if (initialTextSet && initialTextSet.lines) {
     textosDasLinhas = [...initialTextSet.lines];
     console.log("Texto inicial (Nota 32) carregado:", textosDasLinhas.join(" / "));
@@ -208,58 +199,81 @@ function setup() {
   } else {
     currentFontIndex = 0; // Fallback para a primeira fonte
     currentFontConfig = fontConfigurations[currentFontIndex];
-    console.warn("Nota 16 para fonte inicial não encontrada ou inválida. Usando a primeira fonte da lista:", currentFontConfig.name);
+    console.warn(
+      "Nota 16 para fonte inicial não encontrada ou inválida. Usando a primeira fonte da lista:",
+      currentFontConfig.name
+    );
   }
 
   // --- 3. CONFIGURAÇÃO INICIAL DE CORES E FUNDO SVG (Pad Nota 36) ---
   bgColor = [...targetBgColorNote36];
   textColor = [...targetTextColorNote36];
-  console.log(`Cores iniciais (Nota 36): BG -> rgb(${bgColor.join(',')}), Texto -> rgb(${textColor.join(',')})`);
+  console.log(
+    `Cores iniciais (Nota 36): BG -> rgb(<span class="math-inline">\{bgColor\.join\(","\)\}\), Texto \-\> rgb\(</span>{textColor.join(",")})`
+  );
+
+  textContainer = createDiv("");
+  textContainer.id("text-container");
+  textContainerDOMElement = textContainer.elt; // Pega o elemento DOM real
+  textContainerDOMElement.style.transition = `opacity ${textFadeDuration / 1000}s ease-in-out`; // Transição CSS para opacidade
+
+  // Inicializa as opacidades dos SVGs
+  for (let i = 0; i < backgroundContainerIds.length; i++) {
+    currentSvgOpacities[i] = 0;
+    targetSvgOpacities[i] = 0;
+    const container = document.getElementById(backgroundContainerIds[i]);
+    if (container) {
+      container.classList.add('svg-background-container'); // Adiciona classe para transição CSS
+      container.style.opacity = 0; // Garante que todos começam ocultos
+    }
+  }
 
   const initialBackgroundNoteIndex = padNotesForBackgrounds.indexOf(36);
   if (initialBackgroundNoteIndex !== -1) {
-    currentBackgroundIndex = initialBackgroundNoteIndex; 
-    showSpecificSvgBackground(currentBackgroundIndex); 
+    currentBackgroundIndex = initialBackgroundNoteIndex;
+    showSpecificSvgBackground(currentBackgroundIndex); // Isso agora vai acionar a transição
   } else {
-    console.warn("Nota 36 para fundo SVG inicial não encontrada em padNotesForBackgrounds. Nenhum SVG será ativado inicialmente por esta lógica.");
-    hideAllSvgBackgrounds(); 
+    console.warn(
+      "Nota 36 para fundo SVG inicial não encontrada em padNotesForBackgrounds. Nenhum SVG será ativado inicialmente por esta lógica."
+    );
+    hideAllSvgBackgrounds(); // Isso também vai acionar a transição
   }
-
-  textContainer = createDiv('');
-  textContainer.id('text-container');
-  textContainerDOMElement = textContainer.elt; // Pega o elemento DOM real
 
   ajustarTamanhoEElementos();
 
   if (showMidiStatusBox) {
-    midiStatusBoxElement = createDiv('');
-    midiStatusBoxElement.id('midi-status-box');
-    midiStatusBoxElement.style('position', 'fixed');
-    midiStatusBoxElement.style('bottom', statusBoxPadding + 'px');
-    midiStatusBoxElement.style('right', statusBoxPadding + 'px');
-    midiStatusBoxElement.style('background-color', 'rgba(0,0,0,0.7)');
-    midiStatusBoxElement.style('color', 'white');
-    midiStatusBoxElement.style('padding', statusBoxPadding + 'px');
-    midiStatusBoxElement.style('font-family', statusBoxFont);
-    midiStatusBoxElement.style('font-size', statusBoxTextSize + 'px');
-    midiStatusBoxElement.style('border-radius', '5px');
-    midiStatusBoxElement.style('line-height', '1.4');
-    midiStatusBoxElement.style('z-index', '1000');
+    midiStatusBoxElement = createDiv("");
+    midiStatusBoxElement.id("midi-status-box");
+    midiStatusBoxElement.style("position", "fixed");
+    midiStatusBoxElement.style("bottom", statusBoxPadding + "px");
+    midiStatusBoxElement.style("right", statusBoxPadding + "px");
+    midiStatusBoxElement.style("background-color", "rgba(0,0,0,0.7)");
+    midiStatusBoxElement.style("color", "white");
+    midiStatusBoxElement.style("padding", statusBoxPadding + "px");
+    midiStatusBoxElement.style("font-family", statusBoxFont);
+    midiStatusBoxElement.style("font-size", statusBoxTextSize + "px");
+    midiStatusBoxElement.style("border-radius", "5px");
+    midiStatusBoxElement.style("line-height", "1.4");
+    midiStatusBoxElement.style("z-index", "1000");
     midiStatusBoxElement.html("Aguardando MIDI...");
-    midiStatusBoxElement.style('display', showMidiStatusBox ? 'block' : 'none');
+    midiStatusBoxElement.style("display", showMidiStatusBox ? "block" : "none");
   }
 
+  /*
   if (navigator.requestMIDIAccess) {
-    navigator.requestMIDIAccess({ sysex: false })
-      .then(onMIDISuccess, onMIDIFailure);
+    navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
   } else {
     midiStatusText = "Seu navegador não suporta a Web MIDI API.";
-    if (midiStatusBoxElement) midiStatusBoxElement.html(midiStatusText.replace(/\n/g, '<br>'));
+    if (midiStatusBoxElement) midiStatusBoxElement.html(midiStatusText.replace(/\n/g, "<br>"));
     console.warn(midiStatusText);
   }
+  */
 
-  document.body.style.margin = '0';
-  document.body.style.overflow = 'hidden';
+  document.body.style.margin = "0";
+  document.body.style.overflow = "hidden";
+
+  // Inicia o timer para transições automáticas
+  startTransitionTimer();
 
   console.log("Setup Concluído.");
   setupCompleto = true;
@@ -269,39 +283,46 @@ function setup() {
 // # FUNÇÕES AUXILIARES PARA CORES E FUNDOS SVG
 // =====================================================================================
 function applyAndLogColors(noteNum) {
-    aplicarCorTextoAtual();
-    console.log(`Nota ${noteNum}: Cores definidas para BG: rgb(${bgColor.join(',')}), Texto: rgb(${textColor.join(',')})`);
+  aplicarCorTextoAtual();
+  console.log(
+    `Nota <span class="math-inline">\{noteNum\}\: Cores definidas para BG\: rgb\(</span>{bgColor.join(",")}), Texto: rgb(${textColor.join(
+      ","
+    )})`
+  );
 }
 
 function hideAllSvgBackgrounds() {
-    for (let i = 0; i < backgroundContainerIds.length; i++) {
-        const container = document.getElementById(backgroundContainerIds[i]);
-        if (container) {
-            container.classList.remove('active-background');
-        }
+  for (let i = 0; i < backgroundContainerIds.length; i++) {
+    const container = document.getElementById(backgroundContainerIds[i]);
+    if (container) {
+      targetSvgOpacities[i] = 0; // Define o alvo de opacidade para 0
+      // container.classList.remove('active-background'); // Remove a classe, mas a opacidade será animada
     }
-    currentBackgroundIndex = -1; 
-    console.log("Todos os fundos SVG ocultados.");
+  }
+  currentBackgroundIndex = -1;
+  console.log("Todos os fundos SVG ocultados (alvo de opacidade 0).");
 }
 
 function showSpecificSvgBackground(indexToShow) {
-    if (indexToShow < 0 || indexToShow >= backgroundContainerIds.length) {
-        console.warn(`Tentativa de mostrar índice de fundo SVG inválido: ${indexToShow}. Ocultando todos.`);
-        hideAllSvgBackgrounds();
-        return;
+  if (indexToShow < 0 || indexToShow >= backgroundContainerIds.length) {
+    console.warn(`Tentativa de mostrar índice de fundo SVG inválido: ${indexToShow}. Ocultando todos.`);
+    hideAllSvgBackgrounds();
+    return;
+  }
+  for (let i = 0; i < backgroundContainerIds.length; i++) {
+    const container = document.getElementById(backgroundContainerIds[i]);
+    if (container) {
+      if (i === indexToShow) {
+        targetSvgOpacities[i] = 1; // Define o alvo de opacidade para 1
+        // container.classList.add('active-background'); // Adiciona a classe
+      } else {
+        targetSvgOpacities[i] = 0; // Define o alvo de opacidade para 0
+        // container.classList.remove('active-background'); // Remove a classe
+      }
     }
-    for (let i = 0; i < backgroundContainerIds.length; i++) {
-        const container = document.getElementById(backgroundContainerIds[i]);
-        if (container) {
-            if (i === indexToShow) {
-                container.classList.add('active-background');
-            } else {
-                container.classList.remove('active-background');
-            }
-        }
-    }
-    currentBackgroundIndex = indexToShow; 
-    console.log(`Mostrando fundo SVG: ${backgroundContainerIds[indexToShow]}`);
+  }
+  currentBackgroundIndex = indexToShow;
+  console.log(`Mostrando fundo SVG: ${backgroundContainerIds[indexToShow]} (alvo de opacidade 1).`);
 }
 
 // =====================================================================================
@@ -314,32 +335,32 @@ function ajustarTamanhoEElementos() {
 }
 
 function criarElementosDeTexto(tamanhoFonteAtual) {
-  if (!textContainer) return; 
-  textContainer.html('');
+  if (!textContainer) return;
+  textContainer.html("");
   spansDasLinhas = [];
   let numLinhasAtual = textosDasLinhas.length;
   if (numLinhasAtual === 0) return;
 
   for (let i = 0; i < numLinhasAtual; i++) {
-    let linhaDiv = createDiv('');
+    let linhaDiv = createDiv("");
     linhaDiv.parent(textContainer);
-    linhaDiv.class('text-line');
-    linhaDiv.style('line-height', fatorEntrelinha.toString());
+    linhaDiv.class("text-line");
+    linhaDiv.style("line-height", fatorEntrelinha.toString());
 
     let textoDaLinha = textosDasLinhas[i];
     let spansNestaLinha = [];
-    if (textoDaLinha && typeof textoDaLinha === 'string') {
+    if (textoDaLinha && typeof textoDaLinha === "string") {
       for (let j = 0; j < textoDaLinha.length; j++) {
         let char = textoDaLinha[j];
-        let charSpan = createSpan(char === ' ' ? '&nbsp;' : char);
+        let charSpan = createSpan(char === " " ? "&nbsp;" : char);
         charSpan.parent(linhaDiv);
-        charSpan.class('char-span');
-        charSpan.style('font-size', `${tamanhoFonteAtual}px`);
-        charSpan.style('color', `rgb(${textColor.join(',')})`);
+        charSpan.class("char-span");
+        charSpan.style("font-size", `${tamanhoFonteAtual}px`);
+        charSpan.style("color", `rgb(${textColor.join(",")})`);
         if (currentFontConfig && currentFontConfig.fontFamily) {
-          charSpan.style('font-family', currentFontConfig.fontFamily);
+          charSpan.style("font-family", currentFontConfig.fontFamily);
         } else {
-          charSpan.style('font-family', "'Chivo', sans-serif");
+          charSpan.style("font-family", "'Chivo', sans-serif");
         }
         spansNestaLinha.push(charSpan);
       }
@@ -349,23 +370,24 @@ function criarElementosDeTexto(tamanhoFonteAtual) {
 }
 
 function aplicarCorTextoAtual() {
-    if (spansDasLinhas && spansDasLinhas.length > 0) {
-        for (let i = 0; i < spansDasLinhas.length; i++) {
-            if (spansDasLinhas[i] && spansDasLinhas[i].length > 0) {
-                for (let j = 0; j < spansDasLinhas[i].length; j++) {
-                    let span = spansDasLinhas[i][j];
-                    if (span && span.elt) { 
-                        span.style('color', `rgb(${textColor.join(',')})`);
-                    }
-                }
-            }
+  if (spansDasLinhas && spansDasLinhas.length > 0) {
+    for (let i = 0; i < spansDasLinhas.length; i++) {
+      if (spansDasLinhas[i] && spansDasLinhas[i].length > 0) {
+        for (let j = 0; j < spansDasLinhas[i].length; j++) {
+          let span = spansDasLinhas[i][j];
+          if (span && span.elt) {
+            span.style("color", `rgb(${textColor.join(",")})`);
+          }
         }
+      }
     }
+  }
 }
 
 // =====================================================================================
 // # FUNÇÕES DE CALLBACK E PROCESSAMENTO MIDI
 // =====================================================================================
+/*
 function onMIDISuccess(midiAccess) {
   midiStatusText = "Acesso MIDI concedido!";
   console.log(midiStatusText, midiAccess);
@@ -383,14 +405,14 @@ function onMIDISuccess(midiAccess) {
     midiStatusText = "Nenhum dispositivo MIDI de entrada encontrado.";
     console.warn(midiStatusText);
   }
-  if (midiStatusBoxElement) midiStatusBoxElement.html(midiStatusText.replace(/\n/g, '<br>'));
+  if (midiStatusBoxElement) midiStatusBoxElement.html(midiStatusText.replace(/\n/g, "<br>"));
   midiAccess.onstatechange = onMIDIStateChange;
 }
 
 function onMIDIFailure(e) {
   midiStatusText = "Falha ao acessar MIDI: " + e;
   console.error(midiStatusText);
-  if (midiStatusBoxElement) midiStatusBoxElement.html(midiStatusText.replace(/\n/g, '<br>'));
+  if (midiStatusBoxElement) midiStatusBoxElement.html(midiStatusText.replace(/\n/g, "<br>"));
 }
 
 function onMIDIStateChange(event) {
@@ -412,69 +434,81 @@ function onMIDIStateChange(event) {
     }
   }
   if (needsUpdate && midiStatusBoxElement) {
-    midiStatusBoxElement.html(midiStatusText.replace(/\n/g, '<br>'));
+    midiStatusBoxElement.html(midiStatusText.replace(/\n/g, "<br>"));
   }
 }
 
 function onMIDIMessage(event) {
   const [status, data1, data2] = event.data;
-  const command = status & 0xF0;
+  const command = status & 0xf0;
 
-  if (command === 0x90 && data2 > 0) { // Note On
+  if (command === 0x90 && data2 > 0) {
+    // Note On
     let noteNumber = data1;
-    let actionProcessedForNote = false; 
+    let actionProcessedForNote = false;
 
-    // Prioridade 0: Troca de conjunto de TEXTO
-    const selectedTextSet = textSets.find(set => set.note === noteNumber);
+    // Prioridade 0: Troca de conjunto de TEXTO com fade
+    const selectedTextSet = textSets.find((set) => set.note === noteNumber);
     if (selectedTextSet) {
-        if (isTextChanging) return; 
-        isTextChanging = true;
+      if (isTextChanging) return; // Evita múltiplas transições simultâneas
+      isTextChanging = true;
+      targetTextOpacity = 0; // Começa o fade out
 
-        if (textContainerDOMElement) textContainerDOMElement.style.opacity = 0;
-
-        setTimeout(() => {
-            textosDasLinhas = [...selectedTextSet.lines];
-            ajustarTamanhoEElementos(); 
-            if (textContainerDOMElement) textContainerDOMElement.style.opacity = 1;
-            console.log(`Pad de Texto (Nota ${noteNumber}): Carregado texto - "${textosDasLinhas.join(' / ')}"`);
-            isTextChanging = false;
-        }, 300); 
-        // Não marca actionProcessedForNote = true aqui, pois a nota pode ter outras funções.
-        // A lógica de return abaixo cuidará da priorização.
+      setTimeout(() => {
+        textosDasLinhas = [...selectedTextSet.lines];
+        ajustarTamanhoEElementos(); // Re-cria os elementos DOM
+        targetTextOpacity = 1; // Começa o fade in do novo texto
+        console.log(`Pad de Texto (Nota <span class="math-inline">\{noteNumber\}\)\: Carregado texto \- "</span>{textosDasLinhas.join(" / ")}"`);
+        isTextChanging = false;
+      }, textFadeDuration); // Tempo para o fade out completo antes de trocar o texto
+      // Não marca actionProcessedForNote = true aqui, pois a nota pode ter outras funções.
+      // A lógica de return abaixo cuidará da priorização.
     }
 
     // Prioridade 1: Notas que definem cores e ESCONDEM fundos SVG (40, 41, 42)
     if (noteNumber === 40) {
-        bgColor = [...targetBgColorNote40]; textColor = [...targetTextColorNote40];
-        applyAndLogColors(noteNumber);
-        hideAllSvgBackgrounds();
-        actionProcessedForNote = true; 
+      bgColor = [...targetBgColorNote40];
+      textColor = [...targetTextColorNote40];
+      applyAndLogColors(noteNumber);
+      hideAllSvgBackgrounds();
+      actionProcessedForNote = true;
     } else if (noteNumber === 41) {
-        bgColor = [...targetBgColorNote41]; textColor = [...targetTextColorNote41];
-        applyAndLogColors(noteNumber);
-        hideAllSvgBackgrounds();
-        actionProcessedForNote = true;
+      bgColor = [...targetBgColorNote41];
+      textColor = [...targetTextColorNote41];
+      applyAndLogColors(noteNumber);
+      hideAllSvgBackgrounds();
+      actionProcessedForNote = true;
     } else if (noteNumber === 42) {
-        bgColor = [...targetBgColorNote42]; textColor = [...targetTextColorNote42];
-        applyAndLogColors(noteNumber);
-        hideAllSvgBackgrounds();
-        actionProcessedForNote = true;
+      bgColor = [...targetBgColorNote42];
+      textColor = [...targetTextColorNote42];
+      applyAndLogColors(noteNumber);
+      hideAllSvgBackgrounds();
+      actionProcessedForNote = true;
     }
     if (actionProcessedForNote) return; // Se foi uma dessas (40-42), finaliza.
 
     // Prioridade 2: Notas que definem cores e MOSTRAM um fundo SVG específico (36, 37, 38, 39)
     const backgroundShowIndex = padNotesForBackgrounds.indexOf(noteNumber);
-    if (backgroundShowIndex !== -1) { 
-        if (noteNumber === 36) { bgColor = [...targetBgColorNote36]; textColor = [...targetTextColorNote36]; }
-        else if (noteNumber === 37) { bgColor = [...targetBgColorNote37]; textColor = [...targetTextColorNote37]; }
-        else if (noteNumber === 38) { bgColor = [...targetBgColorNote38]; textColor = [...targetTextColorNote38]; }
-        else if (noteNumber === 39) { bgColor = [...targetBgColorNote39]; textColor = [...targetTextColorNote39]; }
-        
-        applyAndLogColors(noteNumber);
-        showSpecificSvgBackground(backgroundShowIndex);
-        actionProcessedForNote = true;
+    if (backgroundShowIndex !== -1) {
+      if (noteNumber === 36) {
+        bgColor = [...targetBgColorNote36];
+        textColor = [...targetTextColorNote36];
+      } else if (noteNumber === 37) {
+        bgColor = [...targetBgColorNote37];
+        textColor = [...targetTextColorNote37];
+      } else if (noteNumber === 38) {
+        bgColor = [...targetBgColorNote38];
+        textColor = [...targetTextColorNote38];
+      } else if (noteNumber === 39) {
+        bgColor = [...targetBgColorNote39];
+        textColor = [...targetTextColorNote39];
+      }
+
+      applyAndLogColors(noteNumber);
+      showSpecificSvgBackground(backgroundShowIndex);
+      actionProcessedForNote = true;
     }
-    if (actionProcessedForNote) return; 
+    if (actionProcessedForNote) return;
 
     // Prioridade 3: Ações para troca de FONTE
     const fontPadIndex = padNotesForFonts.indexOf(noteNumber);
@@ -483,7 +517,7 @@ function onMIDIMessage(event) {
         currentFontIndex = fontPadIndex;
         currentFontConfig = fontConfigurations[currentFontIndex];
         console.log(`Pad de fonte ${fontPadIndex + 1} (Nota ${noteNumber}): Trocando para ${currentFontConfig.name}`);
-        ajustarTamanhoEElementos();
+        ajustarTamanhoEElementos(); // Re-cria elementos com a nova fonte
       }
       actionProcessedForNote = true;
     }
@@ -493,12 +527,12 @@ function onMIDIMessage(event) {
     if (noteNumber === notaDoPadParaStatusBox) {
       showMidiStatusBox = !showMidiStatusBox;
       if (midiStatusBoxElement) {
-        midiStatusBoxElement.style('display', showMidiStatusBox ? 'block' : 'none');
+        midiStatusBoxElement.style("display", showMidiStatusBox ? "block" : "none");
       }
       console.log(`Nota ${noteNumber}: Toggle Status Box para ${showMidiStatusBox}`);
     }
-
-  } else if (command === 0xB0) { // Control Change
+  } else if (command === 0xb0) {
+    // Control Change
     const ccNumber = data1;
     const ccValue = data2;
     lastCcNumber = ccNumber;
@@ -512,7 +546,13 @@ function handleMidiCC(ccNumber, value) {
   let colorChangedByCC = false;
 
   if (ccNumber === 16) {
-    tamanhoFonteDesejado = map(normalizedValue, 0, 1, TAM_FONTE_DESEJADO_MIN_MIDI, TAM_FONTE_DESEJADO_MAX_MIDI);
+    tamanhoFonteDesejado = map(
+      normalizedValue,
+      0,
+      1,
+      TAM_FONTE_DESEJADO_MIN_MIDI,
+      TAM_FONTE_DESEJADO_MAX_MIDI
+    );
     if (tamanhoFonteDesejado < 8) tamanhoFonteDesejado = 8;
     ajustarTamanhoEElementos();
   } else if (ccNumber === 17) {
@@ -537,13 +577,61 @@ function handleMidiCC(ccNumber, value) {
   }
 
   if (colorChangedByCC) {
-    aplicarCorTextoAtual(); 
-    console.log(`Cores Alteradas via CC: BG -> rgb(${bgColor.join(',')}), Texto -> rgb(${textColor.join(',')})`);
+    aplicarCorTextoAtual();
+    console.log(`Cores Alteradas via CC: BG -> rgb(<span class="math-inline">\{bgColor\.join\(","\)\}\), Texto \-\> rgb\(</span>{textColor.join(",")})`);
   }
 }
+*/
 
+// =====================================================================================
+// # FUNÇÕES DE TRANSIÇÃO AUTOMÁTICA
+// =====================================================================================
+function startTransitionTimer() {
+  transitionTimer = setInterval(performTransition, transitionInterval);
+}
+
+function performTransition() {
+  // Transição de Texto
+  if (!isTextChanging) {
+    isTextChanging = true;
+    targetTextOpacity = 0; // Começa o fade out
+
+    setTimeout(() => {
+      // Seleciona um novo conjunto de texto aleatoriamente
+      const newTextSetIndex = Math.floor(Math.random() * textSets.length);
+      textosDasLinhas = [...textSets[newTextSetIndex].lines];
+      ajustarTamanhoEElementos(); // Re-cria os elementos DOM
+      targetTextOpacity = 1; // Começa o fade in do novo texto
+      console.log(`Transição Automática: Carregado texto - "${textosDasLinhas.join(" / ")}"`);
+      isTextChanging = false;
+    }, textFadeDuration); // Tempo para o fade out completo antes de trocar o texto
+  }
+
+  // Transição de SVG
+  const newBackgroundIndex = Math.floor(Math.random() * backgroundContainerIds.length);
+  showSpecificSvgBackground(newBackgroundIndex);
+}
+
+// =====================================================================================
+// # FUNÇÃO DRAW - Loop de Renderização p5.js
+// =====================================================================================
 function draw() {
-  document.body.style.backgroundColor = `rgb(${bgColor.join(',')})`;
+  document.body.style.backgroundColor = `rgb(${bgColor.join(",")})`;
+
+  // Interpolação da opacidade do texto
+  if (textContainerDOMElement) {
+    currentTextOpacity = lerp(currentTextOpacity, targetTextOpacity, 0.1); // Ajuste 0.1 para velocidade
+    textContainerDOMElement.style.opacity = currentTextOpacity;
+  }
+
+  // Interpolação da opacidade dos SVGs
+  for (let i = 0; i < backgroundContainerIds.length; i++) {
+    const container = document.getElementById(backgroundContainerIds[i]);
+    if (container) {
+      currentSvgOpacities[i] = lerp(currentSvgOpacities[i], targetSvgOpacities[i], 0.08); // Ajuste 0.08 para velocidade
+      container.style.opacity = currentSvgOpacities[i];
+    }
+  }
 
   if (spansDasLinhas && spansDasLinhas.length > 0 && currentFontConfig) {
     for (let i = 0; i < spansDasLinhas.length; i++) {
@@ -556,21 +644,21 @@ function draw() {
           const fatorOndaChar = (sin(anguloOnda + j * 0.7 + i * 0.5) + 1) / 2;
 
           if (currentFontConfig.animatedAxes) {
-            currentFontConfig.animatedAxes.forEach(axis => {
+            currentFontConfig.animatedAxes.forEach((axis) => {
               const absoluteMinForAxis = axis.min;
               const absoluteMaxForAxis = axis.max;
               let currentAnimationMin, currentAnimationMax;
 
               if (axis.useGlobalAxisRanges) {
                 const rangeSize = absoluteMaxForAxis - absoluteMinForAxis;
-                currentAnimationMin = absoluteMinForAxis + (minAxisControlado * rangeSize);
-                currentAnimationMax = absoluteMinForAxis + (maxAxisControlado * rangeSize);
+                currentAnimationMin = absoluteMinForAxis + minAxisControlado * rangeSize;
+                currentAnimationMax = absoluteMinForAxis + maxAxisControlado * rangeSize;
               } else {
                 currentAnimationMin = absoluteMinForAxis;
                 currentAnimationMax = absoluteMaxForAxis;
               }
               if (currentAnimationMin > currentAnimationMax) {
-                 [currentAnimationMin, currentAnimationMax] = [currentAnimationMax, currentAnimationMin];
+                [currentAnimationMin, currentAnimationMax] = [currentAnimationMax, currentAnimationMin];
               }
               let axisValue = lerp(currentAnimationMin, currentAnimationMax, fatorOndaChar);
               fvsSettings.push(`'${axis.tag}' ${axisValue.toFixed(0)}`);
@@ -578,17 +666,17 @@ function draw() {
           }
 
           if (currentFontConfig.fixedAxes) {
-            currentFontConfig.fixedAxes.forEach(axis => {
-              if (!fvsSettings.some(s => s.startsWith(`'${axis.tag}'`))) {
+            currentFontConfig.fixedAxes.forEach((axis) => {
+              if (!fvsSettings.some((s) => s.startsWith(`'${axis.tag}'`))) {
                 fvsSettings.push(`'${axis.tag}' ${axis.value}`);
               }
             });
           }
 
           if (fvsSettings.length > 0) {
-            span.style('font-variation-settings', fvsSettings.join(', '));
+            span.style("font-variation-settings", fvsSettings.join(", "));
           } else {
-            span.style('font-variation-settings', 'normal');
+            span.style("font-variation-settings", "normal");
           }
         }
       }
@@ -598,20 +686,20 @@ function draw() {
 
   if (midiStatusBoxElement) {
     if (showMidiStatusBox) {
-        let statusHTML = midiStatusText.replace(/\n/g, '<br>');
-        if (midiInputDevice !== null && typeof lastCcValue !== 'undefined') {
-            statusHTML += `<br>Último CC: #${lastCcNumber} | Valor: ${lastCcValue}`;
-        }
-        if (midiStatusBoxElement.html() !== statusHTML) {
-            midiStatusBoxElement.html(statusHTML);
-        }
-        if (midiStatusBoxElement.style('display') === 'none') {
-            midiStatusBoxElement.style('display', 'block');
-        }
+      let statusHTML = midiStatusText.replace(/\n/g, "<br>");
+      if (midiInputDevice !== null && typeof lastCcValue !== "undefined") {
+        statusHTML += `<br>Último CC: #${lastCcNumber} | Valor: ${lastCcValue}`;
+      }
+      if (midiStatusBoxElement.html() !== statusHTML) {
+        midiStatusBoxElement.html(statusHTML);
+      }
+      if (midiStatusBoxElement.style("display") === "none") {
+        midiStatusBoxElement.style("display", "block");
+      }
     } else {
-        if (midiStatusBoxElement.style('display') !== 'none') {
-            midiStatusBoxElement.style('display', 'none');
-        }
+      if (midiStatusBoxElement.style("display") !== "none") {
+        midiStatusBoxElement.style("display", "none");
+      }
     }
   }
 }
@@ -625,6 +713,6 @@ function windowResized() {
   ajustarTamanhoEElementos();
 }
 
-document.addEventListener('DOMContentLoaded', (event) => {
-    // console.log("DOM completamente carregado e parseado.");
+document.addEventListener("DOMContentLoaded", (event) => {
+  // console.log("DOM completamente carregado e parseado.");
 });
