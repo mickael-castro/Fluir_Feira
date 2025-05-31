@@ -154,13 +154,7 @@ let textContainerDOMElement; // Para acesso direto ao DOM element para opacity
 let setupCompleto = false;
 let isTextChanging = false; // Flag para controlar transição de texto
 
-// --- Variáveis para transição de opacidade ---
-let currentTextOpacity = 1;
-let targetTextOpacity = 1;
 const textFadeDuration = 300; // milissegundos
-
-let currentSvgOpacities = [];
-let targetSvgOpacities = [];
 const svgFadeDuration = 400; // milissegundos
 
 // --- Variáveis para transição automática ---
@@ -209,34 +203,35 @@ function setup() {
   bgColor = [...targetBgColorNote36];
   textColor = [...targetTextColorNote36];
   console.log(
-    `Cores iniciais (Nota 36): BG -> rgb(<span class="math-inline">\{bgColor\.join\(","\)\}\), Texto \-\> rgb\(</span>{textColor.join(",")})`
+    `Cores iniciais (Nota 36): BG -> rgb(${bgColor.join(",")}), Texto -> rgb(${textColor.join(",")})`
   );
 
   textContainer = createDiv("");
   textContainer.id("text-container");
   textContainerDOMElement = textContainer.elt; // Pega o elemento DOM real
-  textContainerDOMElement.style.transition = `opacity ${textFadeDuration / 1000}s ease-in-out`; // Transição CSS para opacidade
+  // As transições agora serão controladas pelas classes 'text-popup-hidden' e 'text-popup-visible'
+  textContainerDOMElement.classList.add('text-popup-hidden'); // Começa escondido/pequeno
 
-  // Inicializa as opacidades dos SVGs
+  // Inicializa as opacidades dos SVGs via CSS
   for (let i = 0; i < backgroundContainerIds.length; i++) {
-    currentSvgOpacities[i] = 0;
-    targetSvgOpacities[i] = 0;
     const container = document.getElementById(backgroundContainerIds[i]);
     if (container) {
       container.classList.add('svg-background-container'); // Adiciona classe para transição CSS
       container.style.opacity = 0; // Garante que todos começam ocultos
+      // Adiciona a transição CSS para cada container SVG
+      container.style.transition = `opacity ${svgFadeDuration / 1000}s ease-in-out`;
     }
   }
 
   const initialBackgroundNoteIndex = padNotesForBackgrounds.indexOf(36);
   if (initialBackgroundNoteIndex !== -1) {
     currentBackgroundIndex = initialBackgroundNoteIndex;
-    showSpecificSvgBackground(currentBackgroundIndex); // Isso agora vai acionar a transição
+    showSpecificSvgBackground(currentBackgroundIndex); // Isso agora vai acionar a transição via CSS
   } else {
     console.warn(
       "Nota 36 para fundo SVG inicial não encontrada em padNotesForBackgrounds. Nenhum SVG será ativado inicialmente por esta lógica."
     );
-    hideAllSvgBackgrounds(); // Isso também vai acionar a transição
+    hideAllSvgBackgrounds(); // Isso também vai acionar a transição via CSS
   }
 
   ajustarTamanhoEElementos();
@@ -259,6 +254,7 @@ function setup() {
     midiStatusBoxElement.style("display", showMidiStatusBox ? "block" : "none");
   }
 
+  // --- Descomente para ativar a Web MIDI API ---
   /*
   if (navigator.requestMIDIAccess) {
     navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
@@ -277,6 +273,10 @@ function setup() {
 
   console.log("Setup Concluído.");
   setupCompleto = true;
+
+  // Mostra o texto com a transição de popup após o setup inicial
+  textContainerDOMElement.classList.remove('text-popup-hidden');
+  textContainerDOMElement.classList.add('text-popup-visible');
 }
 
 // =====================================================================================
@@ -285,7 +285,7 @@ function setup() {
 function applyAndLogColors(noteNum) {
   aplicarCorTextoAtual();
   console.log(
-    `Nota <span class="math-inline">\{noteNum\}\: Cores definidas para BG\: rgb\(</span>{bgColor.join(",")}), Texto: rgb(${textColor.join(
+    `Nota ${noteNum}: Cores definidas para BG: rgb(${bgColor.join(",")}), Texto: rgb(${textColor.join(
       ","
     )})`
   );
@@ -295,12 +295,11 @@ function hideAllSvgBackgrounds() {
   for (let i = 0; i < backgroundContainerIds.length; i++) {
     const container = document.getElementById(backgroundContainerIds[i]);
     if (container) {
-      targetSvgOpacities[i] = 0; // Define o alvo de opacidade para 0
-      // container.classList.remove('active-background'); // Remove a classe, mas a opacidade será animada
+      container.style.opacity = 0; // O CSS cuidará da transição
     }
   }
   currentBackgroundIndex = -1;
-  console.log("Todos os fundos SVG ocultados (alvo de opacidade 0).");
+  console.log("Todos os fundos SVG ocultados (opacidade 0 via CSS).");
 }
 
 function showSpecificSvgBackground(indexToShow) {
@@ -313,16 +312,14 @@ function showSpecificSvgBackground(indexToShow) {
     const container = document.getElementById(backgroundContainerIds[i]);
     if (container) {
       if (i === indexToShow) {
-        targetSvgOpacities[i] = 1; // Define o alvo de opacidade para 1
-        // container.classList.add('active-background'); // Adiciona a classe
+        container.style.opacity = 1; // O CSS cuidará da transição
       } else {
-        targetSvgOpacities[i] = 0; // Define o alvo de opacidade para 0
-        // container.classList.remove('active-background'); // Remove a classe
+        container.style.opacity = 0; // O CSS cuidará da transição
       }
     }
   }
   currentBackgroundIndex = indexToShow;
-  console.log(`Mostrando fundo SVG: ${backgroundContainerIds[indexToShow]} (alvo de opacidade 1).`);
+  console.log(`Mostrando fundo SVG: ${backgroundContainerIds[indexToShow]} (opacidade 1 via CSS).`);
 }
 
 // =====================================================================================
@@ -385,7 +382,7 @@ function aplicarCorTextoAtual() {
 }
 
 // =====================================================================================
-// # FUNÇÕES DE CALLBACK E PROCESSAMENTO MIDI
+// # FUNÇÕES DE CALLBACK E PROCESSAMENTO MIDI (Descomentadas se for usar MIDI)
 // =====================================================================================
 /*
 function onMIDISuccess(midiAccess) {
@@ -452,17 +449,17 @@ function onMIDIMessage(event) {
     if (selectedTextSet) {
       if (isTextChanging) return; // Evita múltiplas transições simultâneas
       isTextChanging = true;
-      targetTextOpacity = 0; // Começa o fade out
+      textContainerDOMElement.classList.remove('text-popup-visible');
+      textContainerDOMElement.classList.add('text-popup-hidden'); // Esconde/diminui o texto
 
       setTimeout(() => {
         textosDasLinhas = [...selectedTextSet.lines];
         ajustarTamanhoEElementos(); // Re-cria os elementos DOM
-        targetTextOpacity = 1; // Começa o fade in do novo texto
-        console.log(`Pad de Texto (Nota <span class="math-inline">\{noteNumber\}\)\: Carregado texto \- "</span>{textosDasLinhas.join(" / ")}"`);
+        textContainerDOMElement.classList.remove('text-popup-hidden');
+        textContainerDOMElement.classList.add('text-popup-visible'); // Mostra/aumenta o novo texto
+        console.log(`Pad de Texto (Nota ${noteNumber}): Carregado texto - "${textosDasLinhas.join(" / ")}"`);
         isTextChanging = false;
       }, textFadeDuration); // Tempo para o fade out completo antes de trocar o texto
-      // Não marca actionProcessedForNote = true aqui, pois a nota pode ter outras funções.
-      // A lógica de return abaixo cuidará da priorização.
     }
 
     // Prioridade 1: Notas que definem cores e ESCONDEM fundos SVG (40, 41, 42)
@@ -485,7 +482,7 @@ function onMIDIMessage(event) {
       hideAllSvgBackgrounds();
       actionProcessedForNote = true;
     }
-    if (actionProcessedForNote) return; // Se foi uma dessas (40-42), finaliza.
+    if (actionProcessedForNote) return;
 
     // Prioridade 2: Notas que definem cores e MOSTRAM um fundo SVG específico (36, 37, 38, 39)
     const backgroundShowIndex = padNotesForBackgrounds.indexOf(noteNumber);
@@ -578,7 +575,7 @@ function handleMidiCC(ccNumber, value) {
 
   if (colorChangedByCC) {
     aplicarCorTextoAtual();
-    console.log(`Cores Alteradas via CC: BG -> rgb(<span class="math-inline">\{bgColor\.join\(","\)\}\), Texto \-\> rgb\(</span>{textColor.join(",")})`);
+    console.log(`Cores Alteradas via CC: BG -> rgb(${bgColor.join(",")}), Texto -> rgb(${textColor.join(",")})`);
   }
 }
 */
@@ -594,20 +591,27 @@ function performTransition() {
   // Transição de Texto
   if (!isTextChanging) {
     isTextChanging = true;
-    targetTextOpacity = 0; // Começa o fade out
+    // Adiciona a classe para esconder/diminuir o texto
+    textContainerDOMElement.classList.remove('text-popup-visible');
+    textContainerDOMElement.classList.add('text-popup-hidden');
 
+    // Espera a transição de saída terminar antes de trocar o texto e iniciar a de entrada
     setTimeout(() => {
       // Seleciona um novo conjunto de texto aleatoriamente
       const newTextSetIndex = Math.floor(Math.random() * textSets.length);
       textosDasLinhas = [...textSets[newTextSetIndex].lines];
       ajustarTamanhoEElementos(); // Re-cria os elementos DOM
-      targetTextOpacity = 1; // Começa o fade in do novo texto
+
+      // Remove a classe de esconder e adiciona a de mostrar para o novo texto
+      textContainerDOMElement.classList.remove('text-popup-hidden');
+      textContainerDOMElement.classList.add('text-popup-visible');
+      
       console.log(`Transição Automática: Carregado texto - "${textosDasLinhas.join(" / ")}"`);
       isTextChanging = false;
-    }, textFadeDuration); // Tempo para o fade out completo antes de trocar o texto
+    }, textFadeDuration); // Tempo para o fade/popup-out completo antes de trocar o texto
   }
 
-  // Transição de SVG
+  // Transição de SVG (mantém a lógica anterior de fade)
   const newBackgroundIndex = Math.floor(Math.random() * backgroundContainerIds.length);
   showSpecificSvgBackground(newBackgroundIndex);
 }
@@ -618,20 +622,8 @@ function performTransition() {
 function draw() {
   document.body.style.backgroundColor = `rgb(${bgColor.join(",")})`;
 
-  // Interpolação da opacidade do texto
-  if (textContainerDOMElement) {
-    currentTextOpacity = lerp(currentTextOpacity, targetTextOpacity, 0.1); // Ajuste 0.1 para velocidade
-    textContainerDOMElement.style.opacity = currentTextOpacity;
-  }
-
-  // Interpolação da opacidade dos SVGs
-  for (let i = 0; i < backgroundContainerIds.length; i++) {
-    const container = document.getElementById(backgroundContainerIds[i]);
-    if (container) {
-      currentSvgOpacities[i] = lerp(currentSvgOpacities[i], targetSvgOpacities[i], 0.08); // Ajuste 0.08 para velocidade
-      container.style.opacity = currentSvgOpacities[i];
-    }
-  }
+  // As interpolações de opacidade para texto e SVG agora são tratadas pelo CSS,
+  // então não precisamos mais de `lerp` aqui para elas.
 
   if (spansDasLinhas && spansDasLinhas.length > 0 && currentFontConfig) {
     for (let i = 0; i < spansDasLinhas.length; i++) {

@@ -2,66 +2,56 @@
    Estilização Base da Página (HTML, Body)
    ========================================================================== */
    html {
-    height: 100%; /* Garante que o body possa usar altura percentual em relação à viewport. */
+    height: 100%;
   }
   
   body {
-    background-color: rgb(25, 29, 59); /* Cor de fundo principal, também controlada via JS. */
+    background-color: rgb(25, 29, 59);
     margin: 0;
     padding: 0;
     width: 100%;
-    height: 100%; /* Ocupa 100% da altura do elemento html. */
-    overflow: hidden; /* Evita barras de rolagem. */
-    color: rgb(230, 226, 190); /* Cor de texto padrão, se não sobrescrita. */
-    /* Adiciona transição para a cor de fundo */
+    height: 100%;
+    overflow: hidden;
+    color: rgb(230, 226, 190);
     transition: background-color 0.5s ease-in-out;
   }
   
   /* ==========================================================================
-     Estilização e Animação dos SVGs de Fundo
+     Estilização e Animação dos Fundos SVG/Imagem
      ========================================================================== */
-  .background-svg-animation-container {
+  .svg-background-container {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw; /* Ocupa toda a largura da viewport. */
-    height: 100vh; /* Ocupa toda a altura da viewport. */
-    display: flex;
-    align-items: flex-start; /* Alinha a imagem SVG no topo do container. */
-    justify-content: flex-start; /* Alinha a imagem SVG à esquerda do container. */
-    overflow: hidden; /* Garante que partes da imagem rotacionada fora do container não sejam visíveis. */
-    z-index: -1; /* Coloca este container atrás de todo o conteúdo principal. */
-    /* Configurações para a transição de fade */
-    opacity: 0; /* Por padrão, os fundos estão invisíveis */
-    transition: opacity 0.4s ease-in-out; /* Duração da transição. Usei 0.4s para corresponder ao JS. */
-    pointer-events: none; /* Não interage com o mouse quando invisível */
+    width: 100vw;
+    height: 100vh;
+    display: flex; /* Usa flexbox para centralizar o conteúdo */
+    align-items: center; /* Centraliza verticalmente */
+    justify-content: center; /* Centraliza horizontalmente */
+    overflow: hidden;
+    z-index: -1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease-in-out; /* Duração da transição definida no JS */
   }
   
-  /* REMOVA esta parte, pois a opacidade será controlada via JS
-  .background-svg-animation-container.active-background {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  */
-  
-  .background-svg-element {
-    width: 800px;
-    height: 800px;
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform: translate(-50%, -50%);
-    transform-origin: center center;
-    animation: rotateBackgroundSVG 120s linear infinite;
+  /* NOVO: Estilização para a imagem de fundo inserida dinamicamente */
+  .svg-background-container img {
+    width: 1500px; /* Aumenta o tamanho da imagem, ajuste conforme necessário */
+    height: 1500px; /* Aumenta o tamanho da imagem, ajuste conforme necessário */
+    object-fit: cover; /* Garante que a imagem cubra a área, cortando se necessário */
+    filter: blur(8px); /* Aplica um desfoque suave, ajuste o valor para mais/menos */
+    transform-origin: center center; /* Garante que a rotação seja no centro da imagem */
+    animation: rotateBackgroundSVG 120s linear infinite; /* Aplica a animação de rotação */
   }
   
-  /* Animação de rotação para o SVG de fundo. */
+  /* Keyframes para a animação de rotação (agora apenas rotação) */
   @keyframes rotateBackgroundSVG {
     from {
-      transform: translate(-48%, -44%) rotate(0deg);
+      transform: rotate(0deg);
     }
     to {
-      transform: translate(-48%, -44%) rotate(360deg);
+      transform: rotate(360deg);
     }
   }
   
@@ -71,16 +61,13 @@
   #text-container {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centraliza as linhas de texto horizontalmente */
-    justify-content: center; /* Centraliza o bloco de linhas de texto verticalmente */
+    align-items: center;
+    justify-content: center;
     width: 100%;
-    height: 100%; /* Ocupa 100% da altura do body */
-    position: relative; /* Necessário para o z-index funcionar corretamente */
-    z-index: 10; /* Acima do z-index de .background-svg-animation-container */
-    opacity: 1; /* Texto começa visível */
-    /* A transição de opacidade do texto será controlada principalmente via JS,
-       mas ter uma transição CSS aqui serve como fallback ou para suavidade extra. */
-    transition: opacity 0.3s ease-in-out;
+    height: 100%;
+    position: relative;
+    z-index: 10;
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
   }
   
   .text-line {
@@ -92,8 +79,18 @@
     display: inline-block;
     font-family: 'Chivo', sans-serif;
     white-space: pre;
-    /* Adiciona transição para a cor do texto */
     transition: color 0.5s ease-in-out;
+  }
+  
+  /* Classes para a transição de popup do texto */
+  .text-popup-hidden {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  
+  .text-popup-visible {
+    opacity: 1;
+    transform: scale(1);
   }
   
   /* ==========================================================================
