@@ -1,14 +1,15 @@
 // =====================================================================================
 // TIPOGRAFIA INTERATIVA COM P5.JS E WEB MIDI API
 // -------------------------------------------------------------------------------------
-// Checkpoint: 02 de Junho de 2025 (v21 - Adição da Fonte Tourney)
+// Checkpoint: 02 de Junho de 2025 (v21.1 - Lógica de Animação Ajustada)
 // Este sketch demonstra como criar tipografia interativa na web,
 // manipulando propriedades de fontes variáveis através de controladores MIDI.
 // Múltiplas imagens de fundo SVG, conjuntos de texto e cores são controlados
 // via MIDI, com transições de fade. Novas "Cenas de Imagem" (MIDI Notes 44-51)
 // utilizam DIVs pré-carregadas. Velocidade de rotação dos SVGs de fundo controlada por CC#04.
-// Adicionada funcionalidade de variação de fonte baseada em áudio como um modo de animação geral (MIDI Note 79).
+// Funcionalidade de variação de fonte baseada em áudio (MIDI Note 79).
 // Adicionada a fonte 'Tourney'.
+// Ajustada a lógica de ativação/desativação das animações Wave e Áudio para melhor controle.
 // =====================================================================================
 // No seu <head>, certifique-se de ter as seguintes importações de fontes:
 // @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Inline:opsz,wght@10..72,100..900&display=swap');
@@ -22,7 +23,7 @@ let tamanhoFonteAplicado;
 let fatorEntrelinha = 1.2;
 let anguloOnda = 0;
 let velocidadeOnda = 0.03; // Controlado pelo CC #20
-let isWaveAnimationActive = true;
+let isWaveAnimationActive = true;  // Estado inicial da animação wave
 let isAudioMotionActive = false; // Nova variável para controlar a animação por áudio
 
 // --- Variáveis para Posição do Texto e Joystick ---
@@ -41,9 +42,16 @@ const MAX_TEXT_OFFSET_Y_PERCENT = 0.35;
 let textOpacity = 1.0; // Controlada pelo CC #21
 
 // --- Variáveis para Controle de Velocidade de Rotação do SVG de Fundo ---
-let svgRotationMidiValue = 64; // Valor MIDI inicial (0-127), 64 é o meio (para uma velocidade "padrão")
-const MIN_SVG_ROTATION_DURATION_S = 10;  // Duração em segundos para a rotação mais rápida (MIDI valor 0)
-const MAX_SVG_ROTATION_DURATION_S = 300; // Duração em segundos para a rotação mais lenta (MIDI valor 127)
+let svgRotationMidiValue = 64;
+const MIN_SVG_ROTATION_DURATION_S = 10;
+const MAX_SVG_ROTATION_DURATION_S = 300;
+
+// --- Variável para Escala Global (SVGs de Fundo e Logos Centrais) ---
+// Adicionada na v20 ou similar, mantida aqui.
+let globalScaleMidiValue = 64;
+const MIN_GLOBAL_SCALE = 0.5;
+const MAX_GLOBAL_SCALE = 2.5;
+const GLOBAL_SCALE_CC = 8;
 
 
 // -------------------------------------------------------------------------------------
@@ -78,16 +86,14 @@ let fontConfigurations = [
     { name: "Zeitung", fontFamily: "'Zeitung', serif", animatedAxes: [{ tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: true }], fixedAxes: [{ tag: 'opsz', value: 20 }] },
     { name: "Hela", fontFamily: "'Hela', sans-serif", animatedAxes: [{ tag: 'wght', min: 100, max: 700, useGlobalAxisRanges: true }], fixedAxes: [] },
     { name: "Tonal", fontFamily: "'tonal-variable', sans-serif", animatedAxes: [{ tag: 'wdth', min: 20, max: 100, useGlobalAxisRanges: true }], fixedAxes: [] },
-    // AQUI ESTÁ A FONTE Big Shoulders Inline (agora sem ser "Audio Reactive" no nome, pois o modo é global)
-    { name: "Big Shoulders Inline", fontFamily: "'Big Shoulders Inline', cursive", animatedAxes: [{ tag: 'opsz', min: 10, max: 72, useGlobalAxisRanges: false }, { tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: false }], fixedAxes: [] },// wght e opsz podem ser controlados por áudio
-    // NOVA FONTE TOURNEY
-    { name: "Tourney", fontFamily: "'Tourney', cursive", animatedAxes: [{ tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: false }, { tag: 'wdth', min: 75, max: 125, useGlobalAxisRanges: false }], fixedAxes: [] } // wght e wdth podem ser controlados por áudio
+    { name: "Big Shoulders Inline", fontFamily: "'Big Shoulders Inline', cursive", animatedAxes: [{ tag: 'opsz', min: 10, max: 72, useGlobalAxisRanges: false }, { tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: false }], fixedAxes: [] },
+    { name: "Tourney", fontFamily: "'Tourney', cursive", animatedAxes: [{ tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: false }, { tag: 'wdth', min: 75, max: 125, useGlobalAxisRanges: false }], fixedAxes: [] }
 ];
 let currentFontIndex = 0;
 let currentFontConfig;
-// Adicione a nota 22 para o PAD-7 e a nota 23 para Tourney, e a nota 79 para ativar/desativar o motion por áudio
-const padNotesForFonts = [16, 17, 18, 19, 20, 21, 22, 23]; // Fontes normais
-const notaPadParaAudioMotion = 79; // Nova nota para alternar o modo de áudio
+
+const padNotesForFonts = [16, 17, 18, 19, 20, 21, 22, 23];
+const notaPadParaAudioMotion = 79;
 const notaPadParaAtivarWaveAnimation = 77;
 const notaPadParaDesativarWaveAnimation = 76;
 
@@ -133,7 +139,6 @@ const FATOR_ENTRELINHA_MIN_MIDI = 0.7; const FATOR_ENTRELINHA_MAX_MIDI = 3.0;
 const VELOCIDADE_ONDA_MIN_MIDI = 0.001; const VELOCIDADE_ONDA_MAX_MIDI = 0.15;
 const notaDoPadParaStatusBox = 43;
 
-
 // -------------------------------------------------------------------------------------
 // # VARIÁVEIS DE ELEMENTOS DOM E ESTADO DO SKETCH
 // -------------------------------------------------------------------------------------
@@ -166,7 +171,7 @@ let audioContext;
 let analyser;
 let dataArray;
 let audioStream;
-let audioReady = false; // Para indicar se o microfone está pronto
+let audioReady = false;
 
 // =====================================================================================
 // # FUNÇÃO PRELOAD
@@ -226,7 +231,6 @@ function setup() {
         statusTextDiv.parent(midiStatusBoxElement);
     }
 
-    // Solicita acesso ao microfone
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ audio: true, video: false })
             .then(function(stream) {
@@ -235,22 +239,21 @@ function setup() {
                 analyser = audioContext.createAnalyser();
                 const microphone = audioContext.createMediaStreamSource(stream);
                 microphone.connect(analyser);
-                analyser.fftSize = 256; // Tamanho do FFT, pode ajustar para 512, 1024, etc.
+                analyser.fftSize = 256;
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
-                audioReady = true; // Microfone pronto
+                audioReady = true;
                 console.log("Acesso ao microfone concedido e áudio configurado.");
             })
             .catch(function(err) {
                 console.error('Erro ao acessar o microfone: ' + err.message);
                 midiStatusText = 'Erro ao acessar o microfone: ' + err.message + '. A animação por áudio não funcionará.';
-                updateMidiStatusBoxContent();
+                if(audioReady === false && statusTextDiv) updateMidiStatusBoxContent(); // Atualiza se houver erro e a caixa já existir
             });
     } else {
         console.warn("Seu navegador não suporta a API getUserMedia para áudio.");
         midiStatusText = "Seu navegador não suporta a API getUserMedia para áudio. A animação por áudio não funcionará.";
-        updateMidiStatusBoxContent();
+        if(statusTextDiv) updateMidiStatusBoxContent();
     }
-
 
     if (navigator.requestMIDIAccess) {
         navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
@@ -263,7 +266,8 @@ function setup() {
     document.body.style.margin = '0';
     document.body.style.overflow = 'hidden';
 
-    updateSvgRotationSpeed(); // Define a velocidade de rotação inicial dos SVGs
+    updateSvgRotationSpeed();
+    updateGlobalScale(); // Adicionado para escala global
 
     setupCompleto = true;
     updateMidiStatusBoxContent();
@@ -271,7 +275,7 @@ function setup() {
 }
 
 // =====================================================================================
-// # FUNÇÕES AUXILIARES GERAIS (Cores, SVG, Status, Rotação SVG)
+// # FUNÇÕES AUXILIARES GERAIS (Cores, SVG, Status, Rotação SVG, Escala Global)
 // =====================================================================================
 function hexToRgbArray(hex) {
     let r = 0, g = 0, b = 0;
@@ -323,7 +327,6 @@ function updateMidiStatusBoxContent() {
         statusHTML += `Cena Atual: Imagem (${activeSceneConfig ? activeSceneConfig.elementId : 'N/A'})<br>`;
     } else if (currentFontConfig) {
         statusHTML += `Fonte Atual: ${currentFontConfig.name}<br>`;
-        // Lógica de exibição do status: prioriza "Áudio Reativo" se estiver ativo.
         if (isAudioMotionActive) {
             statusHTML += `Animação de Texto: ÁUDIO REATIVO<br>`;
         } else {
@@ -339,17 +342,9 @@ function updateMidiStatusBoxContent() {
 }
 
 function updateSvgRotationSpeed() {
-    // Mapeia o valor MIDI (0-127) para a duração da animação.
-    // MIDI 0 = rotação mais rápida (menor duração)
-    // MIDI 127 = rotação mais lenta (maior duração)
     let newDuration = map(svgRotationMidiValue, 0, 127, MIN_SVG_ROTATION_DURATION_S, MAX_SVG_ROTATION_DURATION_S);
-    newDuration = constrain(newDuration, MIN_SVG_ROTATION_DURATION_S, MAX_SVG_ROTATION_DURATION_S); // Garante que está dentro dos limites
-
+    newDuration = constrain(newDuration, MIN_SVG_ROTATION_DURATION_S, MAX_SVG_ROTATION_DURATION_S);
     const durationString = `${newDuration.toFixed(1)}s`;
-    // console.log(`MIDI CC#04: SVG Rotation MIDI Value: ${svgRotationMidiValue}, Mapped Duration: ${durationString}`); // Descomente para depurar se necessário
-
-    // Aplica a nova duração a todos os elementos SVG de fundo
-    // através da variável CSS --svg-rotation-duration.
     backgroundContainerIds.forEach(id => {
         const container = document.getElementById(id);
         if (container) {
@@ -361,6 +356,30 @@ function updateSvgRotationSpeed() {
     });
 }
 
+function updateGlobalScale() { // Função para escala global
+    let newScaleValue = map(globalScaleMidiValue, 0, 127, MIN_GLOBAL_SCALE, MAX_GLOBAL_SCALE);
+    newScaleValue = constrain(newScaleValue, min(MIN_GLOBAL_SCALE, MAX_GLOBAL_SCALE), max(MIN_GLOBAL_SCALE, MAX_GLOBAL_SCALE));
+    const scaleValueString = newScaleValue.toFixed(3);
+
+    backgroundContainerIds.forEach(id => {
+        const container = document.getElementById(id);
+        if (container) {
+            const svgElement = container.querySelector('.background-svg-element');
+            if (svgElement) {
+                svgElement.style.setProperty('--image-scale-factor', scaleValueString);
+            }
+        }
+    });
+
+    Object.values(imageSceneElements).forEach(sceneElementDiv => {
+        if (sceneElementDiv) {
+            const imgElement = sceneElementDiv.querySelector('img');
+            if (imgElement) {
+                imgElement.style.setProperty('--logo-image-scale-factor', scaleValueString);
+            }
+        }
+    });
+}
 
 // =====================================================================================
 // # FUNÇÕES DE MANIPULAÇÃO DE TEXTO
@@ -419,7 +438,6 @@ function showImageScene(sceneConfig) {
         console.error("Text container não encontrado para showImageScene.");
         return;
     }
-    // console.log(`Ativando Cena de Imagem para nota: ${sceneConfig.note} (Elemento: ${sceneConfig.elementId})`);
 
     if (currentActiveImageSceneNote !== null && imageSceneElements[currentActiveImageSceneNote]) {
         imageSceneElements[currentActiveImageSceneNote].classList.remove('active-scene-image');
@@ -440,7 +458,6 @@ function showImageScene(sceneConfig) {
     hideAllSvgBackgrounds();
     textContainerDOMElement.style.opacity = 0;
     bgColor = hexToRgbArray(sceneConfig.bgColorHex);
-    // console.log(`Cena de Imagem ${sceneConfig.elementId} ativada. BG: ${sceneConfig.bgColorHex}`);
 }
 
 function activateTextScene() {
@@ -493,7 +510,6 @@ function onMIDIMessage(event) {
 
     if (command === 0x90 && data2 > 0) { // Note On
         let noteNumber = data1;
-        // console.log(`MIDI Note On Recebida: ${noteNumber}`);
 
         const targetImageSceneConfig = imageScenesConfig.find(s => s.note === noteNumber);
         if (targetImageSceneConfig) {
@@ -503,27 +519,25 @@ function onMIDIMessage(event) {
             actionProcessedThisTurn = true;
         } else {
             activateTextScene();
-            // Resetar estados de animação ao mudar para cena de texto,
-            // permitindo que os pads de controle reativem-os.
-            isAudioMotionActive = false;
-            isWaveAnimationActive = true; // Padrão para wave, pode ser sobrescrito pelos pads 76/77
+            // MODIFICADO: Estados de animação NÃO são resetados aqui automaticamente.
+            // Eles persistem e são controlados pelos pads específicos.
 
-            if (noteNumber === notaPadParaAtivarWaveAnimation) {
+            if (noteNumber === notaPadParaAtivarWaveAnimation) { // Pad 77
                 isWaveAnimationActive = true;
-                isAudioMotionActive = false; // Desativa áudio motion se wave for ativada
+                isAudioMotionActive = false;
                 actionProcessedThisTurn = true;
-            } else if (noteNumber === notaPadParaDesativarWaveAnimation) {
+            } else if (noteNumber === notaPadParaDesativarWaveAnimation) { // Pad 76
                 isWaveAnimationActive = false;
-                isAudioMotionActive = false; // Garante que ambos estão desativados
+                isAudioMotionActive = false;
                 actionProcessedThisTurn = true;
-            } else if (noteNumber === notaPadParaAudioMotion) { // Novo pad para alternar o modo de áudio
-                if (audioReady) { // Só alterna se o microfone estiver pronto
+            } else if (noteNumber === notaPadParaAudioMotion) { // Pad 79
+                if (audioReady) {
                     isAudioMotionActive = !isAudioMotionActive;
                     if (isAudioMotionActive) {
-                        isWaveAnimationActive = false; // Desativa wave se áudio motion for ativado
+                        isWaveAnimationActive = false;
                         console.log("Modo de animação por áudio ATIVADO.");
                     } else {
-                        isWaveAnimationActive = true; // Reativa wave se áudio motion for desativado
+                        // MODIFICADO: Não reativa a wave automaticamente
                         console.log("Modo de animação por áudio DESATIVADO.");
                     }
                 } else {
@@ -532,8 +546,9 @@ function onMIDIMessage(event) {
                 actionProcessedThisTurn = true;
             }
 
-
-            if (!actionProcessedThisTurn || (noteNumber !== notaPadParaAtivarWaveAnimation && noteNumber !== notaPadParaDesativarWaveAnimation && noteNumber !== notaPadParaAudioMotion)) {
+            // Verifica se uma ação de animação já foi processada.
+            // Se não, continua para processar mudança de texto, cor, fonte.
+            if (!actionProcessedThisTurn) {
                 const selectedTextSet = textSets.find(set => set.note === noteNumber);
                 if (selectedTextSet) {
                     if (isTextChanging) { return; }
@@ -578,8 +593,6 @@ function onMIDIMessage(event) {
                     if (currentFontIndex !== fontPadIndex && fontPadIndex < fontConfigurations.length) {
                         currentFontIndex = fontPadIndex;
                         currentFontConfig = fontConfigurations[currentFontIndex];
-                        // Ao mudar a fonte, não resetamos o estado de animação aqui,
-                        // pois isAudioMotionActive e isWaveAnimationActive são controlados pelos seus próprios pads.
                     } else if (fontPadIndex >= fontConfigurations.length) {
                          console.warn(`Índice de fonte ${fontPadIndex} inválido.`);
                     }
@@ -591,6 +604,8 @@ function onMIDIMessage(event) {
         if (noteNumber === notaDoPadParaStatusBox) {
             showMidiStatusBox = !showMidiStatusBox;
             if (midiStatusBoxElement) midiStatusBoxElement.style('display', showMidiStatusBox ? 'block' : 'none');
+            // Não marcar como actionProcessedThisTurn para que outras lógicas de nota possam ocorrer se sobrepostas.
+            // Ou, se for uma ação exclusiva: actionProcessedThisTurn = true;
         }
 
     } else if (command === 0xB0) { // Control Change
@@ -598,9 +613,10 @@ function onMIDIMessage(event) {
         const ccValue = data2;
         lastCcNumber = ccNumber; lastCcValue = ccValue;
         handleMidiCC(ccNumber, ccValue);
+        actionProcessedThisTurn = true; // Para atualizar o status box
     }
 
-    if (actionProcessedThisTurn || command === 0xB0) {
+    if (actionProcessedThisTurn) {
         updateMidiStatusBoxContent();
     }
 }
@@ -618,8 +634,10 @@ function handleMidiCC(ccNumber, value) {
         joystickSpeedY = (Math.abs(diffY) < 5) ? 0 : (diffY / (127 - JOYSTICK_CENTER_VALUE)) * -5 * JOYSTICK_SENSITIVITY * 10;
         return;
     }
-
-    if (ccNumber === 4) { // CC#04 for SVG Rotation Speed
+    if (ccNumber === GLOBAL_SCALE_CC) { // Adicionado para escala global
+        globalScaleMidiValue = value;
+        updateGlobalScale();
+    } else if (ccNumber === 4) {
         svgRotationMidiValue = value;
         updateSvgRotationSpeed();
     } else if (ccNumber === 16) {
@@ -654,22 +672,35 @@ function handleMidiCC(ccNumber, value) {
 function draw() {
     document.body.style.backgroundColor = `rgb(${bgColor.join(',')})`;
 
-    // Variáveis para os valores de áudio
     let graves = 0;
     let agudos = 0;
 
-    // Realiza a análise de áudio uma vez por quadro, se o modo estiver ativo e o microfone pronto
     if (isAudioMotionActive && audioReady && analyser && dataArray) {
         analyser.getByteFrequencyData(dataArray);
-        graves = dataArray.slice(0, Math.floor(dataArray.length * 0.1)).reduce((a, b) => a + b) / Math.max(1, Math.floor(dataArray.length * 0.1));
-        agudos = dataArray.slice(Math.floor(dataArray.length * 0.5)).reduce((a, b) => a + b) / Math.max(1, Math.floor(dataArray.length * 0.5));
+        // Calcula a média dos graves (primeiros 10% dos bins)
+        let gravesSum = 0;
+        const gravesEndIndex = Math.floor(analyser.frequencyBinCount * 0.1);
+        for (let k = 0; k < gravesEndIndex; k++) {
+            gravesSum += dataArray[k];
+        }
+        graves = gravesSum / Math.max(1, gravesEndIndex);
+
+        // Calcula a média dos agudos (últimos 50% dos bins)
+        let agudosSum = 0;
+        const agudosStartIndex = Math.floor(analyser.frequencyBinCount * 0.5);
+        for (let k = agudosStartIndex; k < analyser.frequencyBinCount; k++) {
+            agudosSum += dataArray[k];
+        }
+        agudos = agudosSum / Math.max(1, (analyser.frequencyBinCount - agudosStartIndex));
     }
+
 
     if (!isImageSceneActive && textContainerDOMElement) {
         textPosX += joystickSpeedX;
         textPosY += joystickSpeedY;
-        let maxX = windowWidth * MAX_TEXT_OFFSET_X_PERCENT;
-        let maxY = windowHeight * MAX_TEXT_OFFSET_Y_PERCENT;
+        // Correção: Usar window.innerWidth e window.innerHeight
+        let maxX = window.innerWidth * MAX_TEXT_OFFSET_X_PERCENT;
+        let maxY = window.innerHeight * MAX_TEXT_OFFSET_Y_PERCENT;
         textPosX = constrain(textPosX, -maxX, maxX);
         textPosY = constrain(textPosY, -maxY, maxY);
         textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
@@ -683,40 +714,33 @@ function draw() {
 
                         let fvsSettingsMap = new Map();
 
-                        // Aplica eixos fixos primeiro
                         if (currentFontConfig.fixedAxes) {
                             currentFontConfig.fixedAxes.forEach(axis => fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${axis.value}`));
                         }
 
-                        // Aplica animação por áudio se estiver ativa
                         if (isAudioMotionActive) {
-                            // Verifica se a fonte atual possui o eixo 'wght' e o aplica
                             const wghtAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'wght');
                             if (wghtAxis) {
-                                let wght = map(graves, 0, 255, wghtAxis.min, wghtAxis.max);
+                                let wght = map(graves, 0, 255, wghtAxis.min, wghtAxis.max); // Usar graves para 'wght'
                                 wght = constrain(wght, wghtAxis.min, wghtAxis.max);
                                 fvsSettingsMap.set('wght', `'wght' ${wght.toFixed(0)}`);
                             }
 
-                            // Verifica se a fonte atual possui o eixo 'opsz' e o aplica
                             const opszAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'opsz');
                             if (opszAxis) {
-                                let opsz = map(agudos, 0, 255, opszAxis.min, opszAxis.max);
+                                let opsz = map(agudos, 0, 255, opszAxis.min, opszAxis.max); // Usar agudos para 'opsz'
                                 opsz = constrain(opsz, opszAxis.min, opszAxis.max);
                                 fvsSettingsMap.set('opsz', `'opsz' ${opsz.toFixed(0)}`);
                             }
-
-                            // Verifica se a fonte atual possui o eixo 'wdth' e o aplica (NOVO PARA TOURNEY)
+                            
                             const wdthAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'wdth');
                             if (wdthAxis) {
-                                // Usando agudos para controlar wdth, pode ser ajustado conforme preferência
-                                let wdth = map(agudos, 0, 255, wdthAxis.min, wdthAxis.max);
+                                let wdth = map(agudos, 0, 255, wdthAxis.min, wdthAxis.max); // Usar agudos para 'wdth'
                                 wdth = constrain(wdth, wdthAxis.min, wdthAxis.max);
                                 fvsSettingsMap.set('wdth', `'wdth' ${wdth.toFixed(0)}`);
                             }
-                        }
-                        // Aplica animação de onda se estiver ativa E a animação por áudio NÃO estiver ativa
-                        else if (isWaveAnimationActive && currentFontConfig.animatedAxes) {
+
+                        } else if (isWaveAnimationActive && currentFontConfig.animatedAxes) {
                             const fatorOndaChar = (sin(anguloOnda + j * 0.7 + i * 0.5) + 1) / 2;
                             currentFontConfig.animatedAxes.forEach(axis => {
                                 const absMin = axis.min, absMax = axis.max;
@@ -730,6 +754,15 @@ function draw() {
                                 axisVal = lerp(animMin, animMax, fatorOndaChar);
                                 fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${axisVal.toFixed(0)}`);
                             });
+                        } else { // Se nem áudio nem wave, aplicar valores médios ou padrão para eixos animados
+                            if (currentFontConfig.animatedAxes) {
+                                currentFontConfig.animatedAxes.forEach(axis => {
+                                    if (!fvsSettingsMap.has(axis.tag)) { // Só se não foi definido por áudio ou eixo fixo
+                                        const midVal = (axis.min + axis.max) / 2;
+                                        fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${midVal.toFixed(0)}`);
+                                    }
+                                });
+                            }
                         }
 
                         let fvsString = Array.from(fvsSettingsMap.values()).join(', ');
@@ -738,9 +771,11 @@ function draw() {
                 }
             }
         }
-        if (isWaveAnimationActive) anguloOnda += velocidadeOnda;
+        if (isWaveAnimationActive && !isAudioMotionActive) anguloOnda += velocidadeOnda; // Só avança a onda se ela estiver visível
     }
-    updateMidiStatusBoxContent();
+    // Chamada de updateMidiStatusBoxContent foi movida para onMIDIMessage
+    // para evitar atualizações excessivas no draw loop.
+    // Se precisar de algo do draw loop no status box, pode ser necessário repensar.
 }
 
 // =====================================================================================
@@ -753,8 +788,10 @@ function windowResized() {
         textPosX = 0; textPosY = 0; joystickSpeedX = 0; joystickSpeedY = 0;
         if(textContainerDOMElement) {
             textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
-            textContainerDOMElement.style.opacity = textOpacity;
+            // A opacidade é controlada por textOpacity, não precisa resetar aqui a menos que seja a intenção
+            // textContainerDOMElement.style.opacity = textOpacity;
         }
         ajustarTamanhoEElementos();
     }
+    updateMidiStatusBoxContent(); // Atualiza o status box em caso de redimensionamento
 }
