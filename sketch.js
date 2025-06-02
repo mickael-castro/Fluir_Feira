@@ -1,14 +1,18 @@
 // =====================================================================================
 // TIPOGRAFIA INTERATIVA COM P5.JS E WEB MIDI API
 // -------------------------------------------------------------------------------------
-// Checkpoint: 02 de Junho de 2025 (v20 - Motion por Áudio para Todas as Fontes)
+// Checkpoint: 02 de Junho de 2025 (v21 - Adição da Fonte Tourney)
 // Este sketch demonstra como criar tipografia interativa na web,
 // manipulando propriedades de fontes variáveis através de controladores MIDI.
 // Múltiplas imagens de fundo SVG, conjuntos de texto e cores são controlados
 // via MIDI, com transições de fade. Novas "Cenas de Imagem" (MIDI Notes 44-51)
 // utilizam DIVs pré-carregadas. Velocidade de rotação dos SVGs de fundo controlada por CC#04.
 // Adicionada funcionalidade de variação de fonte baseada em áudio como um modo de animação geral (MIDI Note 79).
+// Adicionada a fonte 'Tourney'.
 // =====================================================================================
+// No seu <head>, certifique-se de ter as seguintes importações de fontes:
+// @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Inline:opsz,wght@10..72,100..900&display=swap');
+// @import url('https://fonts.googleapis.com/css2?family=Tourney:ital,wdth,wght@0,75..125,100..900;1,75..125,100..900&display=swap');
 // -------------------------------------------------------------------------------------
 // # CONFIGURAÇÕES GERAIS DA ANIMAÇÃO E TEXTO
 // -------------------------------------------------------------------------------------
@@ -75,12 +79,14 @@ let fontConfigurations = [
     { name: "Hela", fontFamily: "'Hela', sans-serif", animatedAxes: [{ tag: 'wght', min: 100, max: 700, useGlobalAxisRanges: true }], fixedAxes: [] },
     { name: "Tonal", fontFamily: "'tonal-variable', sans-serif", animatedAxes: [{ tag: 'wdth', min: 20, max: 100, useGlobalAxisRanges: true }], fixedAxes: [] },
     // AQUI ESTÁ A FONTE Big Shoulders Inline (agora sem ser "Audio Reactive" no nome, pois o modo é global)
-    { name: "Big Shoulders Inline", fontFamily: "'Big Shoulders Inline', cursive", animatedAxes: [{ tag: 'opsz', min: 10, max: 72, useGlobalAxisRanges: false }, { tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: false }], fixedAxes: [] } // wght e opsz podem ser controlados por áudio
+    { name: "Big Shoulders Inline", fontFamily: "'Big Shoulders Inline', cursive", animatedAxes: [{ tag: 'opsz', min: 10, max: 72, useGlobalAxisRanges: false }, { tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: false }], fixedAxes: [] },// wght e opsz podem ser controlados por áudio
+    // NOVA FONTE TOURNEY
+    { name: "Tourney", fontFamily: "'Tourney', cursive", animatedAxes: [{ tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: false }, { tag: 'wdth', min: 75, max: 125, useGlobalAxisRanges: false }], fixedAxes: [] } // wght e wdth podem ser controlados por áudio
 ];
 let currentFontIndex = 0;
 let currentFontConfig;
-// Adicione a nota 22 para o PAD-7 e a nota 79 para ativar/desativar o motion por áudio
-const padNotesForFonts = [16, 17, 18, 19, 20, 21, 22]; // Fontes normais
+// Adicione a nota 22 para o PAD-7 e a nota 23 para Tourney, e a nota 79 para ativar/desativar o motion por áudio
+const padNotesForFonts = [16, 17, 18, 19, 20, 21, 22, 23]; // Fontes normais
 const notaPadParaAudioMotion = 79; // Nova nota para alternar o modo de áudio
 const notaPadParaAtivarWaveAnimation = 77;
 const notaPadParaDesativarWaveAnimation = 76;
@@ -572,10 +578,8 @@ function onMIDIMessage(event) {
                     if (currentFontIndex !== fontPadIndex && fontPadIndex < fontConfigurations.length) {
                         currentFontIndex = fontPadIndex;
                         currentFontConfig = fontConfigurations[currentFontIndex];
-                        // Ao mudar a fonte, resetamos o estado de animação para o padrão (wave ativa, áudio inativo),
-                        // a menos que o pad de áudio motion já tenha sido pressionado.
-                        // isAudioMotionActive = false; // Não resetar aqui, pois o pad 79 controla isso
-                        // isWaveAnimationActive = true; // Não resetar aqui, pois os pads 76/77 controlam isso
+                        // Ao mudar a fonte, não resetamos o estado de animação aqui,
+                        // pois isAudioMotionActive e isWaveAnimationActive são controlados pelos seus próprios pads.
                     } else if (fontPadIndex >= fontConfigurations.length) {
                          console.warn(`Índice de fonte ${fontPadIndex} inválido.`);
                     }
@@ -701,7 +705,15 @@ function draw() {
                                 opsz = constrain(opsz, opszAxis.min, opszAxis.max);
                                 fvsSettingsMap.set('opsz', `'opsz' ${opsz.toFixed(0)}`);
                             }
-                            // Adicione aqui outros eixos controlados por áudio se necessário (ex: 'wdth', 'slnt')
+
+                            // Verifica se a fonte atual possui o eixo 'wdth' e o aplica (NOVO PARA TOURNEY)
+                            const wdthAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'wdth');
+                            if (wdthAxis) {
+                                // Usando agudos para controlar wdth, pode ser ajustado conforme preferência
+                                let wdth = map(agudos, 0, 255, wdthAxis.min, wdthAxis.max);
+                                wdth = constrain(wdth, wdthAxis.min, wdthAxis.max);
+                                fvsSettingsMap.set('wdth', `'wdth' ${wdth.toFixed(0)}`);
+                            }
                         }
                         // Aplica animação de onda se estiver ativa E a animação por áudio NÃO estiver ativa
                         else if (isWaveAnimationActive && currentFontConfig.animatedAxes) {
