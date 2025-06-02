@@ -13,7 +13,7 @@ body {
   height: 100%; /* Ocupa 100% da altura do elemento html. */
   overflow: hidden; /* Evita barras de rolagem. */
   color: rgb(230, 226, 190); /* Cor de texto padrão, se não sobrescrita. */
-  /* Adiciona transição para a cor de fundo */
+  /* Transição padrão para a cor de fundo */
   transition: background-color 0.5s ease-in-out;
 }
 
@@ -48,9 +48,16 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  transform: translate(-50%, -50%); 
-  transform-origin: center center;
-  animation: rotateBackgroundSVG 120s linear infinite;
+  transform-origin: center center; /* Já deve estar assim */
+  /* MODIFICADO: Adiciona scale() usando a variável CSS */
+  transform: translate(-50%, -50%) scale(var(--image-scale-factor, 1));
+  
+  /* A animação 'rotateBackgroundSVG' existente (com translate e rotate) irá compor com esta base.
+     A escala definida aqui será mantida durante a animação. */
+  animation-name: rotateBackgroundSVG;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: var(--svg-rotation-duration, 120s);
 }
 
 /* Animação de rotação para o SVG de fundo. */
@@ -86,7 +93,7 @@ body {
 
 .char-span {
   display: inline-block;
-  font-family: 'Chivo', sans-serif;
+  font-family: 'Chivo', sans-serif; /* Fonte padrão, será sobrescrita pelo JS se uma config de fonte for aplicada */
   white-space: pre;
   /* Adiciona transição para a cor do texto */
   transition: color 0.5s ease-in-out;
@@ -100,8 +107,60 @@ body {
   src: url('https://www.axis-praxis.org/fonts/webfonts/Fit-VF.woff2');
 }
 
+@font-face {
+  font-family: 'Grade'; /* Adicionada a fonte Grade */
+  src: url('https://www.axis-praxis.org/fonts/webfonts/GradeGX4-GX-fixed-axis-name.woff2');
+}
+
+@font-face {
+  font-family: 'Zeitung';
+  src: url('https://www.axis-praxis.org/fonts/webfonts/ZeitungProBeta.woff2');
+}
+
+@font-face {
+  font-family: 'Hela'; 
+  src: url('https://www.axis-praxis.org/fonts/webfonts/HelaGX.woff2');
+}
+
+.tonal {
+  font-family: "tonal-variable",sans-serif;
+  font-variation-settings: 'wdth' 100;
+}
+
 .chivo {
   font-family: "Chivo", sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
+}
+
+/* ==========================================================================
+   Estilização dos Containers das Cenas de Imagem (NOVO MÉTODO)
+   ========================================================================== */
+.central-image-scene-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 5; /* Entre os SVGs de fundo (-1) e o texto (10) */
+  transition: opacity 0.3s ease-in-out, visibility 0s linear 0.3s;
+  pointer-events: none;
+}
+
+.central-image-scene-container.active-scene-image {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s; /* Remove delay da visibilidade ao ativar */
+}
+
+.central-image-scene-container img { /* Estilo para as imagens dentro dos containers */
+  max-width: 70%;
+  max-height: 70%;
+  object-fit: contain;
 }
