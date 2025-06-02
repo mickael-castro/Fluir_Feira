@@ -1,14 +1,14 @@
 // =====================================================================================
 // TIPOGRAFIA INTERATIVA COM P5.JS E WEB MIDI API
 // -------------------------------------------------------------------------------------
-// Checkpoint: 02 de Junho de 2025 (v17 - Controle de Velocidade de Rotação SVG BG)
+// Checkpoint: 02 de Junho de 2025 (v20 - Motion por Áudio para Todas as Fontes)
 // Este sketch demonstra como criar tipografia interativa na web,
 // manipulando propriedades de fontes variáveis através de controladores MIDI.
 // Múltiplas imagens de fundo SVG, conjuntos de texto e cores são controlados
 // via MIDI, com transições de fade. Novas "Cenas de Imagem" (MIDI Notes 44-51)
 // utilizam DIVs pré-carregadas. Velocidade de rotação dos SVGs de fundo controlada por CC#04.
+// Adicionada funcionalidade de variação de fonte baseada em áudio como um modo de animação geral (MIDI Note 79).
 // =====================================================================================
-
 // -------------------------------------------------------------------------------------
 // # CONFIGURAÇÕES GERAIS DA ANIMAÇÃO E TEXTO
 // -------------------------------------------------------------------------------------
@@ -19,6 +19,7 @@ let fatorEntrelinha = 1.2;
 let anguloOnda = 0;
 let velocidadeOnda = 0.03; // Controlado pelo CC #20
 let isWaveAnimationActive = true;
+let isAudioMotionActive = false; // Nova variável para controlar a animação por áudio
 
 // --- Variáveis para Posição do Texto e Joystick ---
 let textPosX = 0;
@@ -72,11 +73,18 @@ let fontConfigurations = [
     { name: "Grade", fontFamily: "'Grade', serif", animatedAxes: [{ tag: 'wght', min: 80, max: 150, useGlobalAxisRanges: true }], fixedAxes: [{ tag: 'wdth', value: 90 }] },
     { name: "Zeitung", fontFamily: "'Zeitung', serif", animatedAxes: [{ tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: true }], fixedAxes: [{ tag: 'opsz', value: 20 }] },
     { name: "Hela", fontFamily: "'Hela', sans-serif", animatedAxes: [{ tag: 'wght', min: 100, max: 700, useGlobalAxisRanges: true }], fixedAxes: [] },
-    { name: "Tonal", fontFamily: "'tonal-variable', sans-serif", animatedAxes: [{ tag: 'wdth', min: 20, max: 100, useGlobalAxisRanges: true }], fixedAxes: [] }
+    { name: "Tonal", fontFamily: "'tonal-variable', sans-serif", animatedAxes: [{ tag: 'wdth', min: 20, max: 100, useGlobalAxisRanges: true }], fixedAxes: [] },
+    // AQUI ESTÁ A FONTE Big Shoulders Inline (agora sem ser "Audio Reactive" no nome, pois o modo é global)
+    { name: "Big Shoulders Inline", fontFamily: "'Big Shoulders Inline', cursive", animatedAxes: [{ tag: 'opsz', min: 10, max: 72, useGlobalAxisRanges: false }, { tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: false }], fixedAxes: [] } // wght e opsz podem ser controlados por áudio
 ];
 let currentFontIndex = 0;
 let currentFontConfig;
-const padNotesForFonts = [16, 17, 18, 19, 20, 21];
+// Adicione a nota 22 para o PAD-7 e a nota 79 para ativar/desativar o motion por áudio
+const padNotesForFonts = [16, 17, 18, 19, 20, 21, 22]; // Fontes normais
+const notaPadParaAudioMotion = 79; // Nova nota para alternar o modo de áudio
+const notaPadParaAtivarWaveAnimation = 77;
+const notaPadParaDesativarWaveAnimation = 76;
+
 let minAxisControlado = 0.0;
 let maxAxisControlado = 1.0;
 
@@ -118,8 +126,7 @@ const TAM_FONTE_DESEJADO_MIN_MIDI = 10; const TAM_FONTE_DESEJADO_MAX_MIDI = 350;
 const FATOR_ENTRELINHA_MIN_MIDI = 0.7; const FATOR_ENTRELINHA_MAX_MIDI = 3.0;
 const VELOCIDADE_ONDA_MIN_MIDI = 0.001; const VELOCIDADE_ONDA_MAX_MIDI = 0.15;
 const notaDoPadParaStatusBox = 43;
-const notaPadParaAtivarWaveAnimation = 77;
-const notaPadParaDesativarWaveAnimation = 76;
+
 
 // -------------------------------------------------------------------------------------
 // # VARIÁVEIS DE ELEMENTOS DOM E ESTADO DO SKETCH
@@ -131,8 +138,8 @@ let setupCompleto = false;
 let isTextChanging = false;
 
 // --- Variáveis para Cenas de Imagem (Método de DIVs Pré-carregadas) ---
-let imageSceneElements = {}; 
-let currentActiveImageSceneNote = null; 
+let imageSceneElements = {};
+let currentActiveImageSceneNote = null;
 let isImageSceneActive = false;
 
 const imageScenesConfig = [
@@ -145,6 +152,15 @@ const imageScenesConfig = [
     { note: 50, bgColorHex: '#FFFFFF', elementId: 'image-scene-50' },
     { note: 51, bgColorHex: '#FFFFFF', elementId: 'image-scene-51' }
 ];
+
+// -------------------------------------------------------------------------------------
+// # VARIÁVEIS PARA ANÁLISE DE ÁUDIO
+// -------------------------------------------------------------------------------------
+let audioContext;
+let analyser;
+let dataArray;
+let audioStream;
+let audioReady = false; // Para indicar se o microfone está pronto
 
 // =====================================================================================
 // # FUNÇÃO PRELOAD
@@ -161,7 +177,7 @@ function setup() {
     const initialTextSet = textSets.find(set => set.note === 56) || textSets[0];
     if (initialTextSet) textosDasLinhas = [...initialTextSet.lines];
     currentFontConfig = fontConfigurations[currentFontIndex];
-    
+
     const initialColorNote = 36;
     applyAndLogColors(initialColorNote);
     const initialSvgIndex = padNotesForBackgrounds.indexOf(initialColorNote);
@@ -204,6 +220,32 @@ function setup() {
         statusTextDiv.parent(midiStatusBoxElement);
     }
 
+    // Solicita acesso ao microfone
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+            .then(function(stream) {
+                audioStream = stream;
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                analyser.fftSize = 256; // Tamanho do FFT, pode ajustar para 512, 1024, etc.
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                audioReady = true; // Microfone pronto
+                console.log("Acesso ao microfone concedido e áudio configurado.");
+            })
+            .catch(function(err) {
+                console.error('Erro ao acessar o microfone: ' + err.message);
+                midiStatusText = 'Erro ao acessar o microfone: ' + err.message + '. A animação por áudio não funcionará.';
+                updateMidiStatusBoxContent();
+            });
+    } else {
+        console.warn("Seu navegador não suporta a API getUserMedia para áudio.");
+        midiStatusText = "Seu navegador não suporta a API getUserMedia para áudio. A animação por áudio não funcionará.";
+        updateMidiStatusBoxContent();
+    }
+
+
     if (navigator.requestMIDIAccess) {
         navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
     } else {
@@ -214,9 +256,9 @@ function setup() {
 
     document.body.style.margin = '0';
     document.body.style.overflow = 'hidden';
-    
+
     updateSvgRotationSpeed(); // Define a velocidade de rotação inicial dos SVGs
-    
+
     setupCompleto = true;
     updateMidiStatusBoxContent();
     console.log("Setup Concluído.");
@@ -275,7 +317,12 @@ function updateMidiStatusBoxContent() {
         statusHTML += `Cena Atual: Imagem (${activeSceneConfig ? activeSceneConfig.elementId : 'N/A'})<br>`;
     } else if (currentFontConfig) {
         statusHTML += `Fonte Atual: ${currentFontConfig.name}<br>`;
-        statusHTML += `Animação de Texto: ${isWaveAnimationActive ? 'WAVE' : 'STOP'}<br>`;
+        // Lógica de exibição do status: prioriza "Áudio Reativo" se estiver ativo.
+        if (isAudioMotionActive) {
+            statusHTML += `Animação de Texto: ÁUDIO REATIVO<br>`;
+        } else {
+            statusHTML += `Animação de Texto: ${isWaveAnimationActive ? 'WAVE' : 'STOP'}<br>`;
+        }
     } else { statusHTML += `Cena/Fonte: N/A<br>`; }
     statusHTML += "---<br>";
     statusHTML += midiStatusText.replace(/\n/g, '<br>');
@@ -303,12 +350,6 @@ function updateSvgRotationSpeed() {
             const svgElement = container.querySelector('.background-svg-element');
             if (svgElement) {
                 svgElement.style.setProperty('--svg-rotation-duration', durationString);
-                // REMOVEMOS O BLOCO DE REINÍCIO DA ANIMAÇÃO DAQUI:
-                // if (container.classList.contains('active-background')) {
-                //     svgElement.style.animationName = 'none';
-                //     void svgElement.offsetWidth; // Trigger reflow
-                //     svgElement.style.animationName = 'rotateBackgroundSVG';
-                // }
             }
         }
     });
@@ -326,7 +367,7 @@ function ajustarTamanhoEElementos() {
 
 function criarElementosDeTexto(tamanhoFonteAtual) {
     if (!textContainerDOMElement) return;
-    textContainer.html(''); 
+    textContainer.html('');
     spansDasLinhas = [];
     if (textosDasLinhas.length === 0) return;
 
@@ -377,7 +418,7 @@ function showImageScene(sceneConfig) {
     if (currentActiveImageSceneNote !== null && imageSceneElements[currentActiveImageSceneNote]) {
         imageSceneElements[currentActiveImageSceneNote].classList.remove('active-scene-image');
     }
-    
+
     const newSceneElement = imageSceneElements[sceneConfig.note];
     if (newSceneElement) {
         newSceneElement.classList.add('active-scene-image');
@@ -385,9 +426,9 @@ function showImageScene(sceneConfig) {
         isImageSceneActive = true;
     } else {
         console.error(`Elemento DOM para cena da nota ${sceneConfig.note} (ID: ${sceneConfig.elementId}) não foi encontrado em imageSceneElements.`);
-        isImageSceneActive = false; 
+        isImageSceneActive = false;
         currentActiveImageSceneNote = null;
-        return; 
+        return;
     }
 
     hideAllSvgBackgrounds();
@@ -451,28 +492,53 @@ function onMIDIMessage(event) {
         const targetImageSceneConfig = imageScenesConfig.find(s => s.note === noteNumber);
         if (targetImageSceneConfig) {
             showImageScene(targetImageSceneConfig);
+            isAudioMotionActive = false; // Desativa áudio motion ao mudar para cena de imagem
+            isWaveAnimationActive = false; // Desativa wave ao mudar para cena de imagem
             actionProcessedThisTurn = true;
         } else {
-            activateTextScene(); 
+            activateTextScene();
+            // Resetar estados de animação ao mudar para cena de texto,
+            // permitindo que os pads de controle reativem-os.
+            isAudioMotionActive = false;
+            isWaveAnimationActive = true; // Padrão para wave, pode ser sobrescrito pelos pads 76/77
 
             if (noteNumber === notaPadParaAtivarWaveAnimation) {
-                isWaveAnimationActive = true; actionProcessedThisTurn = true;
+                isWaveAnimationActive = true;
+                isAudioMotionActive = false; // Desativa áudio motion se wave for ativada
+                actionProcessedThisTurn = true;
             } else if (noteNumber === notaPadParaDesativarWaveAnimation) {
-                isWaveAnimationActive = false; actionProcessedThisTurn = true;
+                isWaveAnimationActive = false;
+                isAudioMotionActive = false; // Garante que ambos estão desativados
+                actionProcessedThisTurn = true;
+            } else if (noteNumber === notaPadParaAudioMotion) { // Novo pad para alternar o modo de áudio
+                if (audioReady) { // Só alterna se o microfone estiver pronto
+                    isAudioMotionActive = !isAudioMotionActive;
+                    if (isAudioMotionActive) {
+                        isWaveAnimationActive = false; // Desativa wave se áudio motion for ativado
+                        console.log("Modo de animação por áudio ATIVADO.");
+                    } else {
+                        isWaveAnimationActive = true; // Reativa wave se áudio motion for desativado
+                        console.log("Modo de animação por áudio DESATIVADO.");
+                    }
+                } else {
+                    console.warn("Microfone não está pronto para animação por áudio.");
+                }
+                actionProcessedThisTurn = true;
             }
 
-            if (!actionProcessedThisTurn || (noteNumber !== notaPadParaAtivarWaveAnimation && noteNumber !== notaPadParaDesativarWaveAnimation)) {
+
+            if (!actionProcessedThisTurn || (noteNumber !== notaPadParaAtivarWaveAnimation && noteNumber !== notaPadParaDesativarWaveAnimation && noteNumber !== notaPadParaAudioMotion)) {
                 const selectedTextSet = textSets.find(set => set.note === noteNumber);
                 if (selectedTextSet) {
                     if (isTextChanging) { return; }
                     isTextChanging = true;
-                    textOpacity = 1.0; 
-                    if (textContainerDOMElement) textContainerDOMElement.style.opacity = 0; 
+                    textOpacity = 1.0;
+                    if (textContainerDOMElement) textContainerDOMElement.style.opacity = 0;
 
                     setTimeout(() => {
                         textosDasLinhas = [...selectedTextSet.lines];
                         ajustarTamanhoEElementos();
-                        if (textContainerDOMElement) textContainerDOMElement.style.opacity = textOpacity; 
+                        if (textContainerDOMElement) textContainerDOMElement.style.opacity = textOpacity;
                         isTextChanging = false;
                     }, 300);
                     actionProcessedThisTurn = true;
@@ -481,34 +547,39 @@ function onMIDIMessage(event) {
 
             if (!actionProcessedThisTurn) {
                 if ((noteNumber >= 36 && noteNumber <= 39) || (noteNumber >= 40 && noteNumber <= 42)) {
-                    applyAndLogColors(noteNumber); 
-                    if (noteNumber >= 36 && noteNumber <= 39) { 
+                    applyAndLogColors(noteNumber);
+                    if (noteNumber >= 36 && noteNumber <= 39) {
                         const svgIndex = padNotesForBackgrounds.indexOf(noteNumber);
                         if (svgIndex !== -1) showSpecificSvgBackground(svgIndex);
-                    } else { 
+                    } else {
                         hideAllSvgBackgrounds();
                     }
                     actionProcessedThisTurn = true;
                 }
             }
-            
+
             if (!actionProcessedThisTurn) {
                 const fontPadIndex = padNotesForFonts.indexOf(noteNumber);
                 if (fontPadIndex !== -1) {
                     textPosX = 0; textPosY = 0; joystickSpeedX = 0; joystickSpeedY = 0;
-                    textOpacity = 1.0; 
+                    textOpacity = 1.0;
 
                     if (textContainerDOMElement) {
                         textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
                         textContainerDOMElement.style.opacity = textOpacity;
                     }
+
                     if (currentFontIndex !== fontPadIndex && fontPadIndex < fontConfigurations.length) {
                         currentFontIndex = fontPadIndex;
                         currentFontConfig = fontConfigurations[currentFontIndex];
+                        // Ao mudar a fonte, resetamos o estado de animação para o padrão (wave ativa, áudio inativo),
+                        // a menos que o pad de áudio motion já tenha sido pressionado.
+                        // isAudioMotionActive = false; // Não resetar aqui, pois o pad 79 controla isso
+                        // isWaveAnimationActive = true; // Não resetar aqui, pois os pads 76/77 controlam isso
                     } else if (fontPadIndex >= fontConfigurations.length) {
                          console.warn(`Índice de fonte ${fontPadIndex} inválido.`);
                     }
-                    ajustarTamanhoEElementos(); 
+                    ajustarTamanhoEElementos();
                     actionProcessedThisTurn = true;
                 }
             }
@@ -521,7 +592,7 @@ function onMIDIMessage(event) {
     } else if (command === 0xB0) { // Control Change
         const ccNumber = data1;
         const ccValue = data2;
-        lastCcNumber = ccNumber; lastCcValue = ccValue; 
+        lastCcNumber = ccNumber; lastCcValue = ccValue;
         handleMidiCC(ccNumber, ccValue);
     }
 
@@ -533,43 +604,43 @@ function onMIDIMessage(event) {
 function handleMidiCC(ccNumber, value) {
     let normalizedValue = value / 127.0;
 
-    if (ccNumber === JOYSTICK_CC_X) { 
-        let diffX = value - JOYSTICK_CENTER_VALUE; 
+    if (ccNumber === JOYSTICK_CC_X) {
+        let diffX = value - JOYSTICK_CENTER_VALUE;
         joystickSpeedX = (Math.abs(diffX) < 5) ? 0 : (diffX / (127 - JOYSTICK_CENTER_VALUE)) * 5 * JOYSTICK_SENSITIVITY * 10;
-        return; 
+        return;
     }
-    if (ccNumber === JOYSTICK_CC_Y) { 
+    if (ccNumber === JOYSTICK_CC_Y) {
         let diffY = value - JOYSTICK_CENTER_VALUE;
         joystickSpeedY = (Math.abs(diffY) < 5) ? 0 : (diffY / (127 - JOYSTICK_CENTER_VALUE)) * -5 * JOYSTICK_SENSITIVITY * 10;
-        return; 
+        return;
     }
 
     if (ccNumber === 4) { // CC#04 for SVG Rotation Speed
-        svgRotationMidiValue = value; 
+        svgRotationMidiValue = value;
         updateSvgRotationSpeed();
-    } else if (ccNumber === 16) { 
-        tamanhoFonteDesejado = map(normalizedValue, 0, 1, TAM_FONTE_DESEJADO_MIN_MIDI, TAM_FONTE_DESEJADO_MAX_MIDI); 
-        if (tamanhoFonteDesejado < 8) tamanhoFonteDesejado = 8; 
-        ajustarTamanhoEElementos(); 
-    } else if (ccNumber === 17) { 
-        fatorEntrelinha = map(normalizedValue, 0, 1, FATOR_ENTRELINHA_MIN_MIDI, FATOR_ENTRELINHA_MAX_MIDI); 
-        ajustarTamanhoEElementos(); 
-    } else if (ccNumber === 18) { 
-        minAxisControlado = Math.min(normalizedValue, maxAxisControlado); 
-    } else if (ccNumber === 19) { 
-        maxAxisControlado = Math.max(normalizedValue, minAxisControlado); 
-    } else if (ccNumber === 20) { 
-        velocidadeOnda = map(normalizedValue, 0, 1, VELOCIDADE_ONDA_MIN_MIDI, VELOCIDADE_ONDA_MAX_MIDI); 
-    } else if (ccNumber === 21) { 
+    } else if (ccNumber === 16) {
+        tamanhoFonteDesejado = map(normalizedValue, 0, 1, TAM_FONTE_DESEJADO_MIN_MIDI, TAM_FONTE_DESEJADO_MAX_MIDI);
+        if (tamanhoFonteDesejado < 8) tamanhoFonteDesejado = 8;
+        ajustarTamanhoEElementos();
+    } else if (ccNumber === 17) {
+        fatorEntrelinha = map(normalizedValue, 0, 1, FATOR_ENTRELINHA_MIN_MIDI, FATOR_ENTRELINHA_MAX_MIDI);
+        ajustarTamanhoEElementos();
+    } else if (ccNumber === 18) {
+        minAxisControlado = Math.min(normalizedValue, maxAxisControlado);
+    } else if (ccNumber === 19) {
+        maxAxisControlado = Math.max(normalizedValue, minAxisControlado);
+    } else if (ccNumber === 20) {
+        velocidadeOnda = map(normalizedValue, 0, 1, VELOCIDADE_ONDA_MIN_MIDI, VELOCIDADE_ONDA_MAX_MIDI);
+    } else if (ccNumber === 21) {
         textOpacity = normalizedValue;
-        if (textContainerDOMElement && !isImageSceneActive) { 
+        if (textContainerDOMElement && !isImageSceneActive) {
             textContainerDOMElement.style.opacity = textOpacity;
         }
-    } else if (ccNumber >= 5 && ccNumber <= 7) { 
-        bgColor[ccNumber - 5] = Math.round(map(normalizedValue, 0, 1, 0, 255)); 
-    } else if (ccNumber >= 1 && ccNumber <= 3) { 
+    } else if (ccNumber >= 5 && ccNumber <= 7) {
+        bgColor[ccNumber - 5] = Math.round(map(normalizedValue, 0, 1, 0, 255));
+    } else if (ccNumber >= 1 && ccNumber <= 3) {
         textColor[ccNumber - 1] = Math.round(map(normalizedValue, 0, 1, 0, 255));
-        if (!isImageSceneActive) aplicarCorTextoAtual(); 
+        if (!isImageSceneActive) aplicarCorTextoAtual();
     }
 }
 
@@ -579,7 +650,18 @@ function handleMidiCC(ccNumber, value) {
 function draw() {
     document.body.style.backgroundColor = `rgb(${bgColor.join(',')})`;
 
-    if (!isImageSceneActive && textContainerDOMElement) { 
+    // Variáveis para os valores de áudio
+    let graves = 0;
+    let agudos = 0;
+
+    // Realiza a análise de áudio uma vez por quadro, se o modo estiver ativo e o microfone pronto
+    if (isAudioMotionActive && audioReady && analyser && dataArray) {
+        analyser.getByteFrequencyData(dataArray);
+        graves = dataArray.slice(0, Math.floor(dataArray.length * 0.1)).reduce((a, b) => a + b) / Math.max(1, Math.floor(dataArray.length * 0.1));
+        agudos = dataArray.slice(Math.floor(dataArray.length * 0.5)).reduce((a, b) => a + b) / Math.max(1, Math.floor(dataArray.length * 0.5));
+    }
+
+    if (!isImageSceneActive && textContainerDOMElement) {
         textPosX += joystickSpeedX;
         textPosY += joystickSpeedY;
         let maxX = windowWidth * MAX_TEXT_OFFSET_X_PERCENT;
@@ -594,11 +676,35 @@ function draw() {
                     for (let j = 0; j < spansDasLinhas[i].length; j++) {
                         let span = spansDasLinhas[i][j];
                         if (!span || !span.elt) continue;
+
                         let fvsSettingsMap = new Map();
+
+                        // Aplica eixos fixos primeiro
                         if (currentFontConfig.fixedAxes) {
                             currentFontConfig.fixedAxes.forEach(axis => fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${axis.value}`));
                         }
-                        if (isWaveAnimationActive && currentFontConfig.animatedAxes) {
+
+                        // Aplica animação por áudio se estiver ativa
+                        if (isAudioMotionActive) {
+                            // Verifica se a fonte atual possui o eixo 'wght' e o aplica
+                            const wghtAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'wght');
+                            if (wghtAxis) {
+                                let wght = map(graves, 0, 255, wghtAxis.min, wghtAxis.max);
+                                wght = constrain(wght, wghtAxis.min, wghtAxis.max);
+                                fvsSettingsMap.set('wght', `'wght' ${wght.toFixed(0)}`);
+                            }
+
+                            // Verifica se a fonte atual possui o eixo 'opsz' e o aplica
+                            const opszAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'opsz');
+                            if (opszAxis) {
+                                let opsz = map(agudos, 0, 255, opszAxis.min, opszAxis.max);
+                                opsz = constrain(opsz, opszAxis.min, opszAxis.max);
+                                fvsSettingsMap.set('opsz', `'opsz' ${opsz.toFixed(0)}`);
+                            }
+                            // Adicione aqui outros eixos controlados por áudio se necessário (ex: 'wdth', 'slnt')
+                        }
+                        // Aplica animação de onda se estiver ativa E a animação por áudio NÃO estiver ativa
+                        else if (isWaveAnimationActive && currentFontConfig.animatedAxes) {
                             const fatorOndaChar = (sin(anguloOnda + j * 0.7 + i * 0.5) + 1) / 2;
                             currentFontConfig.animatedAxes.forEach(axis => {
                                 const absMin = axis.min, absMax = axis.max;
@@ -612,14 +718,8 @@ function draw() {
                                 axisVal = lerp(animMin, animMax, fatorOndaChar);
                                 fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${axisVal.toFixed(0)}`);
                             });
-                        } else if (!isWaveAnimationActive && currentFontConfig.animatedAxes) {
-                            currentFontConfig.animatedAxes.forEach(axis => {
-                                if (!fvsSettingsMap.has(axis.tag)) {
-                                    const midVal = (axis.min + axis.max) / 2;
-                                    fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${midVal.toFixed(0)}`);
-                                }
-                            });
                         }
+
                         let fvsString = Array.from(fvsSettingsMap.values()).join(', ');
                         span.style('font-variation-settings', fvsString ? fvsString : 'normal');
                     }
@@ -628,7 +728,7 @@ function draw() {
         }
         if (isWaveAnimationActive) anguloOnda += velocidadeOnda;
     }
-    updateMidiStatusBoxContent(); 
+    updateMidiStatusBoxContent();
 }
 
 // =====================================================================================
@@ -637,7 +737,7 @@ function draw() {
 function windowResized() {
     if (!setupCompleto) return;
     console.log("Janela redimensionada.");
-    if (!isImageSceneActive) { 
+    if (!isImageSceneActive) {
         textPosX = 0; textPosY = 0; joystickSpeedX = 0; joystickSpeedY = 0;
         if(textContainerDOMElement) {
             textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
