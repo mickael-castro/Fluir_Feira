@@ -58,22 +58,25 @@ const GLOBAL_SCALE_CC = 8;
 // # CONFIGURAÇÕES DE CONJUNTOS DE TEXTO E SELEÇÃO VIA MIDI (Pads 56-71)
 // -------------------------------------------------------------------------------------
 const textSets = [
+    //Programa 3 - Text
+    //Banco A
     { note: 56, lines: [ "FEIRA DAS", "PROFISSÕES", "UFC 2025"]},
-    { note: 57, lines: [ "Projeto", "Paisagens", "Tipográficas", "Interativas"]},
-    { note: 58, lines: [ "A tipografia", "está em todos", "os lugares"]},
-    { note: 59, lines: [ "Design", "Coding", "Typography"]} ,
-    { note: 60, lines: [ "CREEP"]} ,
-    { note: 61, lines: [ "WEIRDO"]} ,
-    { note: 62, lines: [ "What I am", "Doing", "Here?"]} ,
-    { note: 63, lines: [ "Exemplo", "Teste", "63"]} ,
-    { note: 64, lines: [ "Exemplo", "Teste", "64"]} ,
-    { note: 65, lines: [ "Exemplo", "Teste", "65"]} ,
-    { note: 66, lines: [ "Exemplo", "Teste", "66"]} ,
-    { note: 67, lines: [ "Exemplo", "Teste", "67"]} ,
-    { note: 68, lines: [ "Exemplo", "Teste", "68"]} ,
-    { note: 69, lines: [ "Exemplo", "Teste", "69"]} ,
-    { note: 70, lines: [ "Exemplo", "Teste", "70"]} ,
-    { note: 71, lines: [ "Exemplo", "Teste", "71"]}
+    { note: 57, lines: [ "Sistemas", "e mídias", "Digitais"]},
+    { note: 58, lines: [ "Paisagens", "tipográficas", "interativas"]},
+    { note: 59, lines: [ "O que", "é isso?"]} ,
+    { note: 60, lines: [ "Tipografia"]} ,
+    { note: 61, lines: [ "A tipografia", "está em todos", "os lugares"]} ,
+    { note: 62, lines: [ "Interativa"]} ,
+    { note: 63, lines: [ "Obrigado!"]} ,
+    // Banco B
+    { note: 64, lines: [ "Couldn't look", "you in the eye"]} ,
+    { note: 65, lines: [ "You're just like", "an angel"]} ,
+    { note: 66, lines: [ "I wish", "I was special"]} ,
+    { note: 67, lines: [ "CREEP"]} ,
+    { note: 68, lines: [ "WEIRDO"]} ,
+    { note: 69, lines: [ "What the hell", "am I doing", "Here"]} ,
+    { note: 70, lines: [ "I don't", "belong here"]} ,
+    { note: 71, lines: [ "---", "---", "---"]}
 ];
 
 // -------------------------------------------------------------------------------------
