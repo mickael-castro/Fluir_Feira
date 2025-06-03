@@ -58,22 +58,24 @@ const GLOBAL_SCALE_CC = 8;
 // # CONFIGURAÇÕES DE CONJUNTOS DE TEXTO E SELEÇÃO VIA MIDI (Pads 56-71)
 // -------------------------------------------------------------------------------------
 const textSets = [
+    //BanK A
     { note: 56, lines: [ "FEIRA DAS", "PROFISSÕES", "UFC 2025"]},
-    { note: 57, lines: [ "Projeto", "Paisagens", "Tipográficas", "Interativas"]},
-    { note: 58, lines: [ "A tipografia", "está em todos", "os lugares"]},
-    { note: 59, lines: [ "Design", "Coding", "Typography"]} ,
-    { note: 60, lines: [ "I´M A CREEP"]} ,
-    { note: 61, lines: [ "I´M A WEIRDO"]} ,
-    { note: 62, lines: [ "What I am", "Doing", "Here?"]} ,
-    { note: 63, lines: [ "I don´t", "Belong", "Here"]} ,
-    { note: 64, lines: [ "SHE´S"]} ,
-    { note: 65, lines: [ "RUNING OUT"]} ,
-    { note: 66, lines: [ "THE DOOR"]} ,
-    { note: 67, lines: [ "RUN"]} ,
-    { note: 68, lines: [ "Fly Me To The Moon"]} ,
-    { note: 69, lines: [ "Exemplo", "Teste", "69"]} ,
-    { note: 70, lines: [ "Exemplo", "Teste", "70"]} ,
-    { note: 71, lines: [ "Exemplo", "Teste", "71"]}
+    { note: 57, lines: [ "Sistemas", "e Mídias", "Dgitais"]} ,
+    { note: 58, lines: [ "Projeto", "Paisagens", "Tipográficas", "Interativas"]},
+    { note: 59, lines: [ "O que", "é isso?"]} ,
+    { note: 60, lines: [ "Tipografia"]},
+    { note: 61, lines: [ "A tipografia", "está em todos", "os lugares"]},
+    { note: 62, lines: [ "Interativa"]},
+    { note: 63, lines: [ "Couldn't look", "you in the eye"]} ,
+    //Bank B
+    { note: 64, lines: [ "You're just like", "an angel"]} ,
+    { note: 65, lines: [ "I wish", "I was special"]} ,
+    { note: 66, lines: [ "CREEP"]} ,
+    { note: 67, lines: [ "WEIRDO"]} ,
+    { note: 68, lines: [ "I don't", "belong here"]} ,
+    { note: 69, lines: [ "She's"]} ,
+    { note: 70, lines: [ "runing out the door"]} ,
+    { note: 71, lines: [ "Fly Me To The Moon"]}    
 ];
 
 // -------------------------------------------------------------------------------------
