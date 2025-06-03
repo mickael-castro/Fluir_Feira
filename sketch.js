@@ -90,12 +90,13 @@ let fontConfigurations = [
     { name: "Hela", fontFamily: "'Hela', sans-serif", animatedAxes: [{ tag: 'wght', min: 100, max: 700, useGlobalAxisRanges: true }], fixedAxes: [] },
     { name: "Tonal", fontFamily: "'tonal-variable', sans-serif", animatedAxes: [{ tag: 'wdth', min: 20, max: 100, useGlobalAxisRanges: true }], fixedAxes: [] },
     { name: "Big Shoulders Inline", fontFamily: "'Big Shoulders Inline', cursive", animatedAxes: [{ tag: 'opsz', min: 10, max: 72, useGlobalAxisRanges: false }, { tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: false }], fixedAxes: [] },
-    { name: "Tourney", fontFamily: "'Tourney', cursive", animatedAxes: [{ tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: false }, { tag: 'wdth', min: 75, max: 125, useGlobalAxisRanges: false }], fixedAxes: [] }
+    { name: "Tourney", fontFamily: "'Tourney', cursive", animatedAxes: [{ tag: 'wght', min: 100, max: 900, useGlobalAxisRanges: false }, { tag: 'wdth', min: 75, max: 125, useGlobalAxisRanges: false }], fixedAxes: [] },
+    { name: "gridlite", fontFamily: "'gridlite-pe-variable', sans-serif", animatedAxes: [{ tag: 'wght', min: 1, max: 900, useGlobalAxisRanges: true }], fixedAxes: [{ tag: 'ELSH', value: 4 }, {tag: 'RECT', value: 400}, {tag: 'BACK', value: 400}]},
 ];
 let currentFontIndex = 0;
 let currentFontConfig;
 
-const padNotesForFonts = [16, 17, 18, 19, 20, 21, 22, 23];
+const padNotesForFonts = [16, 17, 18, 19, 20, 21, 22, 23, 24];
 const notaPadParaAudioMotion = 79;
 const notaPadParaAtivarWaveAnimation = 77;
 const notaPadParaDesativarWaveAnimation = 76;

@@ -133,6 +133,11 @@ body {
   font-style: normal;
 }
 
+.gridlite {
+  font-family: "gridlite-pe-variable",sans-serif;
+  font-variation-settings: 'wght' 400, 'BACK' 400, 'RECT' 400, 'ELSH' 4;
+}
+
 /* ==========================================================================
    Estilização dos Containers das Cenas de Imagem (NOVO MÉTODO)
    ========================================================================== */
