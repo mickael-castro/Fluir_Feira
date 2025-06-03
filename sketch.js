@@ -23,7 +23,7 @@ let tamanhoFonteAplicado;
 let fatorEntrelinha = 1.2;
 let anguloOnda = 0;
 let velocidadeOnda = 0.03; // Controlado pelo CC #20
-let isWaveAnimationActive = true;  // Estado inicial da animação wave
+let isWaveAnimationActive = true;  // Estado inicial da animação wave
 let isAudioMotionActive = false; // Nova variável para controlar a animação por áudio
 
 // --- Variáveis para Posição do Texto e Joystick ---
@@ -58,25 +58,22 @@ const GLOBAL_SCALE_CC = 8;
 // # CONFIGURAÇÕES DE CONJUNTOS DE TEXTO E SELEÇÃO VIA MIDI (Pads 56-71)
 // -------------------------------------------------------------------------------------
 const textSets = [
-    //Programa 3 - Text
-    //Banco A
-    { note: 56, lines: [ "FEIRA DAS", "PROFISSÕES", "UFC 2025"]},
-    { note: 57, lines: [ "Sistemas", "e mídias", "Digitais"]},
-    { note: 58, lines: [ "Paisagens", "tipográficas", "interativas"]},
-    { note: 59, lines: [ "O que", "é isso?"]} ,
-    { note: 60, lines: [ "Tipografia"]} ,
-    { note: 61, lines: [ "A tipografia", "está em todos", "os lugares"]} ,
-    { note: 62, lines: [ "Interativa"]} ,
-    { note: 63, lines: [ "Obrigado!"]} ,
-    // Banco B
-    { note: 64, lines: [ "Couldn't look", "you in the eye"]} ,
-    { note: 65, lines: [ "You're just like", "an angel"]} ,
-    { note: 66, lines: [ "I wish", "I was special"]} ,
-    { note: 67, lines: [ "CREEP"]} ,
-    { note: 68, lines: [ "WEIRDO"]} ,
-    { note: 69, lines: [ "What the hell", "am I doing", "Here"]} ,
-    { note: 70, lines: [ "I don't", "belong here"]} ,
-    { note: 71, lines: [ "---", "---", "---"]}
+    { note: 56, lines: [ "FEIRA DAS", "PROFISSÕES", "UFC 2025"]},
+    { note: 57, lines: [ "Projeto", "Paisagens", "Tipográficas", "Interativas"]},
+    { note: 58, lines: [ "A tipografia", "está em todos", "os lugares"]},
+    { note: 59, lines: [ "Design", "Coding", "Typography"]} ,
+    { note: 60, lines: [ "I´M A CREEP"]} ,
+    { note: 61, lines: [ "I´M A WEIRDO"]} ,
+    { note: 62, lines: [ "What I am", "Doing", "Here?"]} ,
+    { note: 63, lines: [ "I don´t", "Belong", "Here"]} ,
+    { note: 64, lines: [ "SHE´S"]} ,
+    { note: 65, lines: [ "RUNING OUT"]} ,
+    { note: 66, lines: [ "THE DOOR"]} ,
+    { note: 67, lines: [ "RUN"]} ,
+    { note: 68, lines: [ "Fly Me To The Moon"]} ,
+    { note: 69, lines: [ "Exemplo", "Teste", "69"]} ,
+    { note: 70, lines: [ "Exemplo", "Teste", "70"]} ,
+    { note: 71, lines: [ "Exemplo", "Teste", "71"]}
 ];
 
 // -------------------------------------------------------------------------------------
@@ -104,6 +101,15 @@ const notaPadParaDesativarWaveAnimation = 76;
 let minAxisControlado = 0.0;
 let maxAxisControlado = 1.0;
 
+// =====================================================================================
+// NOVAS VARIÁVEIS PARA AJUSTE DO INTERVALO 'wdth' NO MODO ÁUDIO
+// -------------------------------------------------------------------------------------
+const AUDIO_WDTH_MIN_OFFSET = 10; // Offset para reduzir o mínimo do 'wdth'
+const AUDIO_WDTH_MAX_OFFSET = -10; // Offset para reduzir o máximo do 'wdth'
+// Exemplo: se o wdth original é min: 75, max: 125,
+// com offsets de 10 e -10, o novo intervalo será min: 85, max: 115.
+// =====================================================================================
+
 // -------------------------------------------------------------------------------------
 // # CONFIGURAÇÕES DOS FUNDOS SVG E SELEÇÃO VIA MIDI
 // -------------------------------------------------------------------------------------
@@ -117,12 +123,12 @@ let currentBackgroundIndex = -1;
 let bgColor = [25, 29, 59];
 let textColor = [230, 226, 190];
 const targetBgColorNote36 = [81, 106, 174]; const targetTextColorNote36 = [255, 255, 255];
-const targetBgColorNote37 = [19, 42, 54];    const targetTextColorNote37 = [255, 255, 255];
-const targetBgColorNote38 = [186, 147, 45];  const targetTextColorNote38 = [255, 255, 255];
-const targetBgColorNote39 = [81, 106, 174];  const targetTextColorNote39 = [255, 255, 255];
-const targetBgColorNote40 = [153, 204, 51];  const targetTextColorNote40 = [255, 255, 255];
+const targetBgColorNote37 = [19, 42, 54];    const targetTextColorNote37 = [255, 255, 255];
+const targetBgColorNote38 = [186, 147, 45];  const targetTextColorNote38 = [255, 255, 255];
+const targetBgColorNote39 = [81, 106, 174];  const targetTextColorNote39 = [255, 255, 255];
+const targetBgColorNote40 = [153, 204, 51];  const targetTextColorNote40 = [255, 255, 255];
 const targetBgColorNote41 = [102, 102, 102]; const targetTextColorNote41 = [255, 255, 255];
-const targetBgColorNote42 = [51, 51, 51];    const targetTextColorNote42 = [204, 204, 204];
+const targetBgColorNote42 = [51, 51, 51];    const targetTextColorNote42 = [204, 204, 204];
 
 // -------------------------------------------------------------------------------------
 // # VARIÁVEIS DE ESTADO E CONTROLE MIDI
@@ -158,14 +164,14 @@ let currentActiveImageSceneNote = null;
 let isImageSceneActive = false;
 
 const imageScenesConfig = [
-    { note: 44, bgColorHex: '#516AAE', elementId: 'image-scene-44' },
-    { note: 45, bgColorHex: '#CF4A35', elementId: 'image-scene-45' },
-    { note: 46, bgColorHex: '#1FA69B', elementId: 'image-scene-46' },
-    { note: 47, bgColorHex: '#DA8CB7', elementId: 'image-scene-47' },
-    { note: 48, bgColorHex: '#FFFFFF', elementId: 'image-scene-48' },
-    { note: 49, bgColorHex: '#FFFFFF', elementId: 'image-scene-49' },
-    { note: 50, bgColorHex: '#FFFFFF', elementId: 'image-scene-50' },
-    { note: 51, bgColorHex: '#FFFFFF', elementId: 'image-scene-51' }
+    { note: 44, bgColorHex: '#516AAE', elementId: 'image-scene-44' },
+    { note: 45, bgColorHex: '#CF4A35', elementId: 'image-scene-45' },
+    { note: 46, bgColorHex: '#1FA69B', elementId: 'image-scene-46' },
+    { note: 47, bgColorHex: '#DA8CB7', elementId: 'image-scene-47' },
+    { note: 48, bgColorHex: '#FFFFFF', elementId: 'image-scene-48' },
+    { note: 49, bgColorHex: '#FFFFFF', elementId: 'image-scene-49' },
+    { note: 50, bgColorHex: '#FFFFFF', elementId: 'image-scene-50' },
+    { note: 51, bgColorHex: '#FFFFFF', elementId: 'image-scene-51' }
 ];
 
 // -------------------------------------------------------------------------------------
@@ -186,616 +192,625 @@ function preload() {}
 // # FUNÇÃO SETUP
 // =====================================================================================
 function setup() {
-    noCanvas();
-    console.log("Setup: Tipografia Interativa com MIDI.");
+    noCanvas();
+    console.log("Setup: Tipografia Interativa com MIDI.");
 
-    const initialTextSet = textSets.find(set => set.note === 56) || textSets[0];
-    if (initialTextSet) textosDasLinhas = [...initialTextSet.lines];
-    currentFontConfig = fontConfigurations[currentFontIndex];
+    const initialTextSet = textSets.find(set => set.note === 56) || textSets[0];
+    if (initialTextSet) textosDasLinhas = [...initialTextSet.lines];
+    currentFontConfig = fontConfigurations[currentFontIndex];
 
-    const initialColorNote = 36;
-    applyAndLogColors(initialColorNote);
-    const initialSvgIndex = padNotesForBackgrounds.indexOf(initialColorNote);
-    if (initialSvgIndex !== -1) {
-        showSpecificSvgBackground(initialSvgIndex);
-    } else {
-        hideAllSvgBackgrounds();
-    }
+    const initialColorNote = 36;
+    applyAndLogColors(initialColorNote);
+    const initialSvgIndex = padNotesForBackgrounds.indexOf(initialColorNote);
+    if (initialSvgIndex !== -1) {
+        showSpecificSvgBackground(initialSvgIndex);
+    } else {
+        hideAllSvgBackgrounds();
+    }
 
-    textContainer = createDiv('');
-    textContainer.id('text-container');
-    textContainerDOMElement = textContainer.elt;
-    if (!textContainerDOMElement) {
-        console.error("ERRO CRÍTICO: #text-container não pôde ser criado.");
-    } else {
-        textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
-        textContainerDOMElement.style.opacity = textOpacity;
-    }
+    textContainer = createDiv('');
+    textContainer.id('text-container');
+    textContainerDOMElement = textContainer.elt;
+    if (!textContainerDOMElement) {
+        console.error("ERRO CRÍTICO: #text-container não pôde ser criado.");
+    } else {
+        textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
+        textContainerDOMElement.style.opacity = textOpacity;
+    }
 
-    imageScenesConfig.forEach(scene => {
-        const el = document.getElementById(scene.elementId);
-        if (el) {
-            imageSceneElements[scene.note] = el;
-        } else {
-            console.error(`ERRO CRÍTICO: Elemento da cena de imagem #${scene.elementId} (Nota ${scene.note}) não encontrado no HTML.`);
-        }
-    });
+    imageScenesConfig.forEach(scene => {
+        const el = document.getElementById(scene.elementId);
+        if (el) {
+            imageSceneElements[scene.note] = el;
+        } else {
+            console.error(`ERRO CRÍTICO: Elemento da cena de imagem #${scene.elementId} (Nota ${scene.note}) não encontrado no HTML.`);
+        }
+    });
 
-    ajustarTamanhoEElementos();
+    ajustarTamanhoEElementos();
 
-    if (showMidiStatusBox) {
-        midiStatusBoxElement = createDiv('');
-        midiStatusBoxElement.id('midi-status-box');
-        midiStatusBoxElement.style('position', 'fixed').style('bottom', statusBoxPadding + 'px').style('right', statusBoxPadding + 'px')
-                          .style('background-color', 'rgba(0,0,0,0.7)').style('color', 'white').style('padding', statusBoxPadding + 'px')
-                          .style('font-family', statusBoxFont).style('font-size', statusBoxTextSize + 'px')
-                          .style('border-radius', '5px').style('line-height', '1.4').style('z-index', '1000')
-                          .style('display', showMidiStatusBox ? 'block' : 'none');
-        statusTextDiv = createDiv('');
-        statusTextDiv.parent(midiStatusBoxElement);
-    }
+    if (showMidiStatusBox) {
+        midiStatusBoxElement = createDiv('');
+        midiStatusBoxElement.id('midi-status-box');
+        midiStatusBoxElement.style('position', 'fixed').style('bottom', statusBoxPadding + 'px').style('right', statusBoxPadding + 'px')
+                          .style('background-color', 'rgba(0,0,0,0.7)').style('color', 'white').style('padding', statusBoxPadding + 'px')
+                          .style('font-family', statusBoxFont).style('font-size', statusBoxTextSize + 'px')
+                          .style('border-radius', '5px').style('line-height', '1.4').style('z-index', '1000')
+                          .style('display', showMidiStatusBox ? 'block' : 'none');
+        statusTextDiv = createDiv('');
+        statusTextDiv.parent(midiStatusBoxElement);
+    }
 
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-            .then(function(stream) {
-                audioStream = stream;
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                const microphone = audioContext.createMediaStreamSource(stream);
-                microphone.connect(analyser);
-                analyser.fftSize = 256;
-                dataArray = new Uint8Array(analyser.frequencyBinCount);
-                audioReady = true;
-                console.log("Acesso ao microfone concedido e áudio configurado.");
-            })
-            .catch(function(err) {
-                console.error('Erro ao acessar o microfone: ' + err.message);
-                midiStatusText = 'Erro ao acessar o microfone: ' + err.message + '. A animação por áudio não funcionará.';
-                if(audioReady === false && statusTextDiv) updateMidiStatusBoxContent(); // Atualiza se houver erro e a caixa já existir
-            });
-    } else {
-        console.warn("Seu navegador não suporta a API getUserMedia para áudio.");
-        midiStatusText = "Seu navegador não suporta a API getUserMedia para áudio. A animação por áudio não funcionará.";
-        if(statusTextDiv) updateMidiStatusBoxContent();
-    }
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+            .then(function(stream) {
+                audioStream = stream;
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                analyser.fftSize = 256;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                audioReady = true;
+                console.log("Acesso ao microfone concedido e áudio configurado.");
+            })
+            .catch(function(err) {
+                console.error('Erro ao acessar o microfone: ' + err.message);
+                midiStatusText = 'Erro ao acessar o microfone: ' + err.message + '. A animação por áudio não funcionará.';
+                if(audioReady === false && statusTextDiv) updateMidiStatusBoxContent(); // Atualiza se houver erro e a caixa já existir
+            });
+    } else {
+        console.warn("Seu navegador não suporta a API getUserMedia para áudio.");
+        midiStatusText = "Seu navegador não suporta a API getUserMedia para áudio. A animação por áudio não funcionará.";
+        if(statusTextDiv) updateMidiStatusBoxContent();
+    }
 
-    if (navigator.requestMIDIAccess) {
-        navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
-    } else {
-        midiStatusText = "Seu navegador não suporta a Web MIDI API.";
-        if (showMidiStatusBox && statusTextDiv) updateMidiStatusBoxContent();
-        console.warn(midiStatusText);
-    }
+    if (navigator.requestMIDIAccess) {
+        navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
+    } else {
+        midiStatusText = "Seu navegador não suporta a Web MIDI API.";
+        if (showMidiStatusBox && statusTextDiv) updateMidiStatusBoxContent();
+        console.warn(midiStatusText);
+    }
 
-    document.body.style.margin = '0';
-    document.body.style.overflow = 'hidden';
+    document.body.style.margin = '0';
+    document.body.style.overflow = 'hidden';
 
-    updateSvgRotationSpeed();
-    updateGlobalScale(); // Adicionado para escala global
+    updateSvgRotationSpeed();
+    updateGlobalScale(); // Adicionado para escala global
 
-    setupCompleto = true;
-    updateMidiStatusBoxContent();
-    console.log("Setup Concluído.");
+    setupCompleto = true;
+    updateMidiStatusBoxContent();
+    console.log("Setup Concluído.");
 }
 
 // =====================================================================================
 // # FUNÇÕES AUXILIARES GERAIS (Cores, SVG, Status, Rotação SVG, Escala Global)
 // =====================================================================================
 function hexToRgbArray(hex) {
-    let r = 0, g = 0, b = 0;
-    if (hex.startsWith('#')) hex = hex.slice(1);
-    if (hex.length === 3) { r = parseInt(hex[0] + hex[0], 16); g = parseInt(hex[1] + hex[1], 16); b = parseInt(hex[2] + hex[2], 16); }
-    else if (hex.length === 6) { r = parseInt(hex.substring(0, 2), 16); g = parseInt(hex.substring(2, 4), 16); b = parseInt(hex.substring(4, 6), 16); }
-    return [r, g, b];
+    let r = 0, g = 0, b = 0;
+    if (hex.startsWith('#')) hex = hex.slice(1);
+    if (hex.length === 3) { r = parseInt(hex[0] + hex[0], 16); g = parseInt(hex[1] + hex[1], 16); b = parseInt(hex[2] + hex[2], 16); }
+    else if (hex.length === 6) { r = parseInt(hex.substring(0, 2), 16); g = parseInt(hex.substring(2, 4), 16); b = parseInt(hex.substring(4, 6), 16); }
+    return [r, g, b];
 }
 
 function applyAndLogColors(noteNum) {
-    if (noteNum === 36) { bgColor = [...targetBgColorNote36]; textColor = [...targetTextColorNote36]; }
-    else if (noteNum === 37) { bgColor = [...targetBgColorNote37]; textColor = [...targetTextColorNote37]; }
-    else if (noteNum === 38) { bgColor = [...targetBgColorNote38]; textColor = [...targetTextColorNote38]; }
-    else if (noteNum === 39) { bgColor = [...targetBgColorNote39]; textColor = [...targetTextColorNote39]; }
-    else if (noteNum === 40) { bgColor = [...targetBgColorNote40]; textColor = [...targetTextColorNote40]; }
-    else if (noteNum === 41) { bgColor = [...targetBgColorNote41]; textColor = [...targetTextColorNote41]; }
-    else if (noteNum === 42) { bgColor = [...targetBgColorNote42]; textColor = [...targetTextColorNote42]; }
-    aplicarCorTextoAtual();
-    console.log(`Nota ${noteNum}: Cores definidas para BG: rgb(${bgColor.join(',')}), Texto: rgb(${textColor.join(',')})`);
+    if (noteNum === 36) { bgColor = [...targetBgColorNote36]; textColor = [...targetTextColorNote36]; }
+    else if (noteNum === 37) { bgColor = [...targetBgColorNote37]; textColor = [...targetTextColorNote37]; }
+    else if (noteNum === 38) { bgColor = [...targetBgColorNote38]; textColor = [...targetTextColorNote38]; }
+    else if (noteNum === 39) { bgColor = [...targetBgColorNote39]; textColor = [...targetTextColorNote39]; }
+    else if (noteNum === 40) { bgColor = [...targetBgColorNote40]; textColor = [...targetTextColorNote40]; }
+    else if (noteNum === 41) { bgColor = [...targetBgColorNote41]; textColor = [...targetTextColorNote41]; }
+    else if (noteNum === 42) { bgColor = [...targetBgColorNote42]; textColor = [...targetTextColorNote42]; }
+    aplicarCorTextoAtual();
+    console.log(`Nota ${noteNum}: Cores definidas para BG: rgb(${bgColor.join(',')}), Texto: rgb(${textColor.join(',')})`);
 }
 
 function hideAllSvgBackgrounds() {
-    backgroundContainerIds.forEach(id => {
-        const container = document.getElementById(id);
-        if (container) container.classList.remove('active-background');
-    });
-    currentBackgroundIndex = -1;
+    backgroundContainerIds.forEach(id => {
+        const container = document.getElementById(id);
+        if (container) container.classList.remove('active-background');
+    });
+    currentBackgroundIndex = -1;
 }
 
 function showSpecificSvgBackground(indexToShow) {
-    if (indexToShow < 0 || indexToShow >= backgroundContainerIds.length) {
-        hideAllSvgBackgrounds(); return;
-    }
-    backgroundContainerIds.forEach((id, i) => {
-        const container = document.getElementById(id);
-        if (container) {
-            if (i === indexToShow) container.classList.add('active-background');
-            else container.classList.remove('active-background');
-        }
-    });
-    currentBackgroundIndex = indexToShow;
+    if (indexToShow < 0 || indexToShow >= backgroundContainerIds.length) {
+        hideAllSvgBackgrounds(); return;
+    }
+    backgroundContainerIds.forEach((id, i) => {
+        const container = document.getElementById(id);
+        if (container) {
+            if (i === indexToShow) container.classList.add('active-background');
+            else container.classList.remove('active-background');
+        }
+    });
+    currentBackgroundIndex = indexToShow;
 }
 
 function updateMidiStatusBoxContent() {
-    if (!statusTextDiv || !showMidiStatusBox) return;
-    let statusHTML = "<strong>ESTATÍSTICAS PARA NERDS</strong><br>---<br>";
-    if (isImageSceneActive && currentActiveImageSceneNote !== null) {
-        const activeSceneConfig = imageScenesConfig.find(s => s.note === currentActiveImageSceneNote);
-        statusHTML += `Cena Atual: Imagem (${activeSceneConfig ? activeSceneConfig.elementId : 'N/A'})<br>`;
-    } else if (currentFontConfig) {
-        statusHTML += `Fonte Atual: ${currentFontConfig.name}<br>`;
-        if (isAudioMotionActive) {
-            statusHTML += `Animação de Texto: ÁUDIO REATIVO<br>`;
-        } else {
-            statusHTML += `Animação de Texto: ${isWaveAnimationActive ? 'WAVE' : 'STOP'}<br>`;
-        }
-    } else { statusHTML += `Cena/Fonte: N/A<br>`; }
-    statusHTML += "---<br>";
-    statusHTML += midiStatusText.replace(/\n/g, '<br>');
-    if (midiInputDevice && typeof lastCcValue !== 'undefined' && typeof lastCcNumber !== 'undefined') {
-        statusHTML += `<br>---<br>Último CC: #${lastCcNumber} | Valor: ${lastCcValue}`;
-    }
-    if (statusTextDiv.html() !== statusHTML) statusTextDiv.html(statusHTML);
+    if (!statusTextDiv || !showMidiStatusBox) return;
+    let statusHTML = "<strong>ESTATÍSTICAS PARA NERDS</strong><br>---<br>";
+    if (isImageSceneActive && currentActiveImageSceneNote !== null) {
+        const activeSceneConfig = imageScenesConfig.find(s => s.note === currentActiveImageSceneNote);
+        statusHTML += `Cena Atual: Imagem (${activeSceneConfig ? activeSceneConfig.elementId : 'N/A'})<br>`;
+    } else if (currentFontConfig) {
+        statusHTML += `Fonte Atual: ${currentFontConfig.name}<br>`;
+        if (isAudioMotionActive) {
+            statusHTML += `Animação de Texto: ÁUDIO REATIVO<br>`;
+        } else {
+            statusHTML += `Animação de Texto: ${isWaveAnimationActive ? 'WAVE' : 'STOP'}<br>`;
+        }
+    } else { statusHTML += `Cena/Fonte: N/A<br>`; }
+    statusHTML += "---<br>";
+    statusHTML += midiStatusText.replace(/\n/g, '<br>');
+    if (midiInputDevice && typeof lastCcValue !== 'undefined' && typeof lastCcNumber !== 'undefined') {
+        statusHTML += `<br>---<br>Último CC: #${lastCcNumber} | Valor: ${lastCcValue}`;
+    }
+    if (statusTextDiv.html() !== statusHTML) statusTextDiv.html(statusHTML);
 }
 
 function updateSvgRotationSpeed() {
-    let newDuration = map(svgRotationMidiValue, 0, 127, MIN_SVG_ROTATION_DURATION_S, MAX_SVG_ROTATION_DURATION_S);
-    newDuration = constrain(newDuration, MIN_SVG_ROTATION_DURATION_S, MAX_SVG_ROTATION_DURATION_S);
-    const durationString = `${newDuration.toFixed(1)}s`;
-    backgroundContainerIds.forEach(id => {
-        const container = document.getElementById(id);
-        if (container) {
-            const svgElement = container.querySelector('.background-svg-element');
-            if (svgElement) {
-                svgElement.style.setProperty('--svg-rotation-duration', durationString);
-            }
-        }
-    });
+    let newDuration = map(svgRotationMidiValue, 0, 127, MIN_SVG_ROTATION_DURATION_S, MAX_SVG_ROTATION_DURATION_S);
+    newDuration = constrain(newDuration, MIN_SVG_ROTATION_DURATION_S, MAX_SVG_ROTATION_DURATION_S);
+    const durationString = `${newDuration.toFixed(1)}s`;
+    backgroundContainerIds.forEach(id => {
+        const container = document.getElementById(id);
+        if (container) {
+            const svgElement = container.querySelector('.background-svg-element');
+            if (svgElement) {
+                svgElement.style.setProperty('--svg-rotation-duration', durationString);
+            }
+        }
+    });
 }
 
 function updateGlobalScale() { // Função para escala global
-    let newScaleValue = map(globalScaleMidiValue, 0, 127, MIN_GLOBAL_SCALE, MAX_GLOBAL_SCALE);
-    newScaleValue = constrain(newScaleValue, min(MIN_GLOBAL_SCALE, MAX_GLOBAL_SCALE), max(MIN_GLOBAL_SCALE, MAX_GLOBAL_SCALE));
-    const scaleValueString = newScaleValue.toFixed(3);
+    let newScaleValue = map(globalScaleMidiValue, 0, 127, MIN_GLOBAL_SCALE, MAX_GLOBAL_SCALE);
+    newScaleValue = constrain(newScaleValue, min(MIN_GLOBAL_SCALE, MAX_GLOBAL_SCALE), max(MIN_GLOBAL_SCALE, MAX_GLOBAL_SCALE));
+    const scaleValueString = newScaleValue.toFixed(3);
 
-    backgroundContainerIds.forEach(id => {
-        const container = document.getElementById(id);
-        if (container) {
-            const svgElement = container.querySelector('.background-svg-element');
-            if (svgElement) {
-                svgElement.style.setProperty('--image-scale-factor', scaleValueString);
-            }
-        }
-    });
+    backgroundContainerIds.forEach(id => {
+        const container = document.getElementById(id);
+        if (container) {
+            const svgElement = container.querySelector('.background-svg-element');
+            if (svgElement) {
+                svgElement.style.setProperty('--image-scale-factor', scaleValueString);
+            }
+        }
+    });
 
-    Object.values(imageSceneElements).forEach(sceneElementDiv => {
-        if (sceneElementDiv) {
-            const imgElement = sceneElementDiv.querySelector('img');
-            if (imgElement) {
-                imgElement.style.setProperty('--logo-image-scale-factor', scaleValueString);
-            }
-        }
-    });
+    Object.values(imageSceneElements).forEach(sceneElementDiv => {
+        if (sceneElementDiv) {
+            const imgElement = sceneElementDiv.querySelector('img');
+            if (imgElement) {
+                imgElement.style.setProperty('--logo-image-scale-factor', scaleValueString);
+            }
+        }
+    });
 }
 
 // =====================================================================================
 // # FUNÇÕES DE MANIPULAÇÃO DE TEXTO
 // =====================================================================================
 function ajustarTamanhoEElementos() {
-    tamanhoFonteAplicado = tamanhoFonteDesejado;
-    if (tamanhoFonteAplicado < 8) tamanhoFonteAplicado = 8;
-    criarElementosDeTexto(tamanhoFonteAplicado);
+    tamanhoFonteAplicado = tamanhoFonteDesejado;
+    if (tamanhoFonteAplicado < 8) tamanhoFonteAplicado = 8;
+    criarElementosDeTexto(tamanhoFonteAplicado);
 }
 
 function criarElementosDeTexto(tamanhoFonteAtual) {
-    if (!textContainerDOMElement) return;
-    textContainer.html('');
-    spansDasLinhas = [];
-    if (textosDasLinhas.length === 0) return;
+    if (!textContainerDOMElement) return;
+    textContainer.html('');
+    spansDasLinhas = [];
+    if (textosDasLinhas.length === 0) return;
 
-    for (let i = 0; i < textosDasLinhas.length; i++) {
-        let linhaDiv = createDiv('');
-        linhaDiv.parent(textContainer);
-        linhaDiv.class('text-line');
-        linhaDiv.style('line-height', fatorEntrelinha.toString());
-        let spansNestaLinha = [];
-        let textoDaLinha = textosDasLinhas[i];
-        if (textoDaLinha && typeof textoDaLinha === 'string') {
-            for (let j = 0; j < textoDaLinha.length; j++) {
-                let char = textoDaLinha[j];
-                let charSpan = createSpan(char === ' ' ? '&nbsp;' : char);
-                charSpan.parent(linhaDiv);
-                charSpan.class('char-span');
-                charSpan.style('font-size', `${tamanhoFonteAtual}px`);
-                charSpan.style('color', `rgb(${textColor.join(',')})`);
-                let fontFamilyToApply = currentFontConfig ? currentFontConfig.fontFamily : "'Chivo', sans-serif";
-                charSpan.style('font-family', fontFamilyToApply);
-                spansNestaLinha.push(charSpan);
-            }
-        }
-        spansDasLinhas.push(spansNestaLinha);
-    }
+    for (let i = 0; i < textosDasLinhas.length; i++) {
+        let linhaDiv = createDiv('');
+        linhaDiv.parent(textContainer);
+        linhaDiv.class('text-line');
+        linhaDiv.style('line-height', fatorEntrelinha.toString());
+        let spansNestaLinha = [];
+        let textoDaLinha = textosDasLinhas[i];
+        if (textoDaLinha && typeof textoDaLinha === 'string') {
+            for (let j = 0; j < textoDaLinha.length; j++) {
+                let char = textoDaLinha[j];
+                let charSpan = createSpan(char === ' ' ? '&nbsp;' : char);
+                charSpan.parent(linhaDiv);
+                charSpan.class('char-span');
+                charSpan.style('font-size', `${tamanhoFonteAtual}px`);
+                charSpan.style('color', `rgb(${textColor.join(',')})`);
+                let fontFamilyToApply = currentFontConfig ? currentFontConfig.fontFamily : "'Chivo', sans-serif";
+                charSpan.style('font-family', fontFamilyToApply);
+                spansNestaLinha.push(charSpan);
+            }
+        }
+        spansDasLinhas.push(spansNestaLinha);
+    }
 }
 
 function aplicarCorTextoAtual() {
-    if (spansDasLinhas) {
-        spansDasLinhas.forEach(linha => {
-            linha.forEach(span => {
-                if (span && span.elt) span.style('color', `rgb(${textColor.join(',')})`);
-            });
-        });
-    }
+    if (spansDasLinhas) {
+        spansDasLinhas.forEach(linha => {
+            linha.forEach(span => {
+                if (span && span.elt) span.style('color', `rgb(${textColor.join(',')})`);
+            });
+        });
+    }
 }
 
 // =====================================================================================
 // # FUNÇÕES DE GERENCIAMENTO DE CENA (TEXTO vs IMAGEM)
 // =====================================================================================
 function showImageScene(sceneConfig) {
-    if (!textContainerDOMElement) {
-        console.error("Text container não encontrado para showImageScene.");
-        return;
-    }
+    if (!textContainerDOMElement) {
+        console.error("Text container não encontrado para showImageScene.");
+        return;
+    }
 
-    if (currentActiveImageSceneNote !== null && imageSceneElements[currentActiveImageSceneNote]) {
-        imageSceneElements[currentActiveImageSceneNote].classList.remove('active-scene-image');
-    }
+    if (currentActiveImageSceneNote !== null && imageSceneElements[currentActiveImageSceneNote]) {
+        imageSceneElements[currentActiveImageSceneNote].classList.remove('active-scene-image');
+    }
 
-    const newSceneElement = imageSceneElements[sceneConfig.note];
-    if (newSceneElement) {
-        newSceneElement.classList.add('active-scene-image');
-        currentActiveImageSceneNote = sceneConfig.note;
-        isImageSceneActive = true;
-    } else {
-        console.error(`Elemento DOM para cena da nota ${sceneConfig.note} (ID: ${sceneConfig.elementId}) não foi encontrado em imageSceneElements.`);
-        isImageSceneActive = false;
-        currentActiveImageSceneNote = null;
-        return;
-    }
+    const newSceneElement = imageSceneElements[sceneConfig.note];
+    if (newSceneElement) {
+        newSceneElement.classList.add('active-scene-image');
+        currentActiveImageSceneNote = sceneConfig.note;
+        isImageSceneActive = true;
+    } else {
+        console.error(`Elemento DOM para cena da nota ${sceneConfig.note} (ID: ${sceneConfig.elementId}) não foi encontrado em imageSceneElements.`);
+        isImageSceneActive = false;
+        currentActiveImageSceneNote = null;
+        return;
+    }
 
-    hideAllSvgBackgrounds();
-    textContainerDOMElement.style.opacity = 0;
-    bgColor = hexToRgbArray(sceneConfig.bgColorHex);
+    hideAllSvgBackgrounds();
+    textContainerDOMElement.style.opacity = 0;
+    bgColor = hexToRgbArray(sceneConfig.bgColorHex);
 }
 
 function activateTextScene() {
-    if (!textContainerDOMElement) {
-        console.error("Text container não encontrado para activateTextScene.");
-        return;
-    }
+    if (!textContainerDOMElement) {
+        console.error("Text container não encontrado para activateTextScene.");
+        return;
+    }
 
-    if (isImageSceneActive && currentActiveImageSceneNote !== null && imageSceneElements[currentActiveImageSceneNote]) {
-        imageSceneElements[currentActiveImageSceneNote].classList.remove('active-scene-image');
-    }
-    currentActiveImageSceneNote = null;
-    isImageSceneActive = false;
-    textContainerDOMElement.style.opacity = textOpacity;
+    if (isImageSceneActive && currentActiveImageSceneNote !== null && imageSceneElements[currentActiveImageSceneNote]) {
+        imageSceneElements[currentActiveImageSceneNote].classList.remove('active-scene-image');
+    }
+    currentActiveImageSceneNote = null;
+    isImageSceneActive = false;
+    textContainerDOMElement.style.opacity = textOpacity;
 }
 
 // =====================================================================================
 // # FUNÇÕES DE CALLBACK E PROCESSAMENTO MIDI
 // =====================================================================================
 function onMIDISuccess(midiAccess) {
-    midiStatusText = "Acesso MIDI concedido!";
-    const inputs = midiAccess.inputs.values();
-    let inputFound = false;
-    for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
-        midiInputDevice = input.value;
-        midiStatusText = `Conectado: ${midiInputDevice.name}`;
-        console.log(`Ouvindo o dispositivo MIDI: ${midiInputDevice.name}`);
-        midiInputDevice.onmidimessage = onMIDIMessage;
-        inputFound = true; break;
-    }
-    if (!inputFound) { midiStatusText = "Nenhum dispositivo MIDI de entrada encontrado."; console.warn(midiStatusText); }
-    updateMidiStatusBoxContent();
-    midiAccess.onstatechange = onMIDIStateChange;
+    midiStatusText = "Acesso MIDI concedido!";
+    const inputs = midiAccess.inputs.values();
+    let inputFound = false;
+    for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
+        midiInputDevice = input.value;
+        midiStatusText = `Conectado: ${midiInputDevice.name}`;
+        console.log(`Ouvindo o dispositivo MIDI: ${midiInputDevice.name}`);
+        midiInputDevice.onmidimessage = onMIDIMessage;
+        inputFound = true; break;
+    }
+    if (!inputFound) { midiStatusText = "Nenhum dispositivo MIDI de entrada encontrado."; console.warn(midiStatusText); }
+    updateMidiStatusBoxContent();
+    midiAccess.onstatechange = onMIDIStateChange;
 }
 
 function onMIDIFailure(e) {
-    midiStatusText = "Falha ao acessar MIDI: " + e; console.error(midiStatusText);
-    updateMidiStatusBoxContent();
+    midiStatusText = "Falha ao acessar MIDI: " + e; console.error(midiStatusText);
+    updateMidiStatusBoxContent();
 }
 
 function onMIDIStateChange(event) {
-    console.log("Estado MIDI mudou:", event.port.name, event.port.type, event.port.state);
-    updateMidiStatusBoxContent();
+    console.log("Estado MIDI mudou:", event.port.name, event.port.type, event.port.state);
+    updateMidiStatusBoxContent();
 }
 
 function onMIDIMessage(event) {
-    const [status, data1, data2] = event.data;
-    const command = status & 0xF0;
-    let actionProcessedThisTurn = false;
+    const [status, data1, data2] = event.data;
+    const command = status & 0xF0;
+    let actionProcessedThisTurn = false;
 
-    if (command === 0x90 && data2 > 0) { // Note On
-        let noteNumber = data1;
+    if (command === 0x90 && data2 > 0) { // Note On
+        let noteNumber = data1;
 
-        const targetImageSceneConfig = imageScenesConfig.find(s => s.note === noteNumber);
-        if (targetImageSceneConfig) {
-            showImageScene(targetImageSceneConfig);
-            isAudioMotionActive = false; // Desativa áudio motion ao mudar para cena de imagem
-            isWaveAnimationActive = false; // Desativa wave ao mudar para cena de imagem
-            actionProcessedThisTurn = true;
-        } else {
-            activateTextScene();
-            // MODIFICADO: Estados de animação NÃO são resetados aqui automaticamente.
-            // Eles persistem e são controlados pelos pads específicos.
+        const targetImageSceneConfig = imageScenesConfig.find(s => s.note === noteNumber);
+        if (targetImageSceneConfig) {
+            showImageScene(targetImageSceneConfig);
+            isAudioMotionActive = false; // Desativa áudio motion ao mudar para cena de imagem
+            isWaveAnimationActive = false; // Desativa wave ao mudar para cena de imagem
+            actionProcessedThisTurn = true;
+        } else {
+            activateTextScene();
+            // MODIFICADO: Estados de animação NÃO são resetados aqui automaticamente.
+            // Eles persistem e são controlados pelos pads específicos.
 
-            if (noteNumber === notaPadParaAtivarWaveAnimation) { // Pad 77
-                isWaveAnimationActive = true;
-                isAudioMotionActive = false;
-                actionProcessedThisTurn = true;
-            } else if (noteNumber === notaPadParaDesativarWaveAnimation) { // Pad 76
-                isWaveAnimationActive = false;
-                isAudioMotionActive = false;
-                actionProcessedThisTurn = true;
-            } else if (noteNumber === notaPadParaAudioMotion) { // Pad 79
-                if (audioReady) {
-                    isAudioMotionActive = !isAudioMotionActive;
-                    if (isAudioMotionActive) {
-                        isWaveAnimationActive = false;
-                        console.log("Modo de animação por áudio ATIVADO.");
-                    } else {
-                        // MODIFICADO: Não reativa a wave automaticamente
-                        console.log("Modo de animação por áudio DESATIVADO.");
-                    }
-                } else {
-                    console.warn("Microfone não está pronto para animação por áudio.");
-                }
-                actionProcessedThisTurn = true;
-            }
+            if (noteNumber === notaPadParaAtivarWaveAnimation) { // Pad 77
+                isWaveAnimationActive = true;
+                isAudioMotionActive = false;
+                actionProcessedThisTurn = true;
+            } else if (noteNumber === notaPadParaDesativarWaveAnimation) { // Pad 76
+                isWaveAnimationActive = false;
+                isAudioMotionActive = false;
+                actionProcessedThisTurn = true;
+            } else if (noteNumber === notaPadParaAudioMotion) { // Pad 79
+                if (audioReady) {
+                    isAudioMotionActive = !isAudioMotionActive;
+                    if (isAudioMotionActive) {
+                        isWaveAnimationActive = false;
+                        console.log("Modo de animação por áudio ATIVADO.");
+                    } else {
+                        // MODIFICADO: Não reativa a wave automaticamente
+                        console.log("Modo de animação por áudio DESATIVADO.");
+                    }
+                } else {
+                    console.warn("Microfone não está pronto para animação por áudio.");
+                }
+                actionProcessedThisTurn = true;
+            }
 
-            // Verifica se uma ação de animação já foi processada.
-            // Se não, continua para processar mudança de texto, cor, fonte.
-            if (!actionProcessedThisTurn) {
-                const selectedTextSet = textSets.find(set => set.note === noteNumber);
-                if (selectedTextSet) {
-                    if (isTextChanging) { return; }
-                    isTextChanging = true;
-                    textOpacity = 1.0;
-                    if (textContainerDOMElement) textContainerDOMElement.style.opacity = 0;
+            // Verifica se uma ação de animação já foi processada.
+            // Se não, continua para processar mudança de texto, cor, fonte.
+            if (!actionProcessedThisTurn) {
+                const selectedTextSet = textSets.find(set => set.note === noteNumber);
+                if (selectedTextSet) {
+                    if (isTextChanging) { return; }
+                    isTextChanging = true;
+                    textOpacity = 1.0;
+                    if (textContainerDOMElement) textContainerDOMElement.style.opacity = 0;
 
-                    setTimeout(() => {
-                        textosDasLinhas = [...selectedTextSet.lines];
-                        ajustarTamanhoEElementos();
-                        if (textContainerDOMElement) textContainerDOMElement.style.opacity = textOpacity;
-                        isTextChanging = false;
-                    }, 300);
-                    actionProcessedThisTurn = true;
-                }
-            }
+                    setTimeout(() => {
+                        textosDasLinhas = [...selectedTextSet.lines];
+                        ajustarTamanhoEElementos();
+                        if (textContainerDOMElement) textContainerDOMElement.style.opacity = textOpacity;
+                        isTextChanging = false;
+                    }, 300);
+                    actionProcessedThisTurn = true;
+                }
+            }
 
-            if (!actionProcessedThisTurn) {
-                if ((noteNumber >= 36 && noteNumber <= 39) || (noteNumber >= 40 && noteNumber <= 42)) {
-                    applyAndLogColors(noteNumber);
-                    if (noteNumber >= 36 && noteNumber <= 39) {
-                        const svgIndex = padNotesForBackgrounds.indexOf(noteNumber);
-                        if (svgIndex !== -1) showSpecificSvgBackground(svgIndex);
-                    } else {
-                        hideAllSvgBackgrounds();
-                    }
-                    actionProcessedThisTurn = true;
-                }
-            }
+            if (!actionProcessedThisTurn) {
+                if ((noteNumber >= 36 && noteNumber <= 39) || (noteNumber >= 40 && noteNumber <= 42)) {
+                    applyAndLogColors(noteNumber);
+                    if (noteNumber >= 36 && noteNumber <= 39) {
+                        const svgIndex = padNotesForBackgrounds.indexOf(noteNumber);
+                        if (svgIndex !== -1) showSpecificSvgBackground(svgIndex);
+                    } else {
+                        hideAllSvgBackgrounds();
+                    }
+                    actionProcessedThisTurn = true;
+                }
+            }
 
-            if (!actionProcessedThisTurn) {
-                const fontPadIndex = padNotesForFonts.indexOf(noteNumber);
-                if (fontPadIndex !== -1) {
-                    textPosX = 0; textPosY = 0; joystickSpeedX = 0; joystickSpeedY = 0;
-                    textOpacity = 1.0;
+            if (!actionProcessedThisTurn) {
+                const fontPadIndex = padNotesForFonts.indexOf(noteNumber);
+                if (fontPadIndex !== -1) {
+                    textPosX = 0; textPosY = 0; joystickSpeedX = 0; joystickSpeedY = 0;
+                    textOpacity = 1.0;
 
-                    if (textContainerDOMElement) {
-                        textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
-                        textContainerDOMElement.style.opacity = textOpacity;
-                    }
+                    if (textContainerDOMElement) {
+                        textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
+                        textContainerDOMElement.style.opacity = textOpacity;
+                    }
 
-                    if (currentFontIndex !== fontPadIndex && fontPadIndex < fontConfigurations.length) {
-                        currentFontIndex = fontPadIndex;
-                        currentFontConfig = fontConfigurations[currentFontIndex];
-                    } else if (fontPadIndex >= fontConfigurations.length) {
-                         console.warn(`Índice de fonte ${fontPadIndex} inválido.`);
-                    }
-                    ajustarTamanhoEElementos();
-                    actionProcessedThisTurn = true;
-                }
-            }
-        }
-        if (noteNumber === notaDoPadParaStatusBox) {
-            showMidiStatusBox = !showMidiStatusBox;
-            if (midiStatusBoxElement) midiStatusBoxElement.style('display', showMidiStatusBox ? 'block' : 'none');
-            // Não marcar como actionProcessedThisTurn para que outras lógicas de nota possam ocorrer se sobrepostas.
-            // Ou, se for uma ação exclusiva: actionProcessedThisTurn = true;
-        }
+                    if (currentFontIndex !== fontPadIndex && fontPadIndex < fontConfigurations.length) {
+                        currentFontIndex = fontPadIndex;
+                        currentFontConfig = fontConfigurations[currentFontIndex];
+                    } else if (fontPadIndex >= fontConfigurations.length) {
+                         console.warn(`Índice de fonte ${fontPadIndex} inválido.`);
+                    }
+                    ajustarTamanhoEElementos();
+                    actionProcessedThisTurn = true;
+                }
+            }
+        }
+        if (noteNumber === notaDoPadParaStatusBox) {
+            showMidiStatusBox = !showMidiStatusBox;
+            if (midiStatusBoxElement) midiStatusBoxElement.style('display', showMidiStatusBox ? 'block' : 'none');
+            // Não marcar como actionProcessedThisTurn para que outras lógicas de nota possam ocorrer se sobrepostas.
+            // Ou, se for uma ação exclusiva: actionProcessedThisTurn = true;
+        }
 
-    } else if (command === 0xB0) { // Control Change
-        const ccNumber = data1;
-        const ccValue = data2;
-        lastCcNumber = ccNumber; lastCcValue = ccValue;
-        handleMidiCC(ccNumber, ccValue);
-        actionProcessedThisTurn = true; // Para atualizar o status box
-    }
+    } else if (command === 0xB0) { // Control Change
+        const ccNumber = data1;
+        const ccValue = data2;
+        lastCcNumber = ccNumber; lastCcValue = ccValue;
+        handleMidiCC(ccNumber, ccValue);
+        actionProcessedThisTurn = true; // Para atualizar o status box
+    }
 
-    if (actionProcessedThisTurn) {
-        updateMidiStatusBoxContent();
-    }
+    if (actionProcessedThisTurn) {
+        updateMidiStatusBoxContent();
+    }
 }
 
 function handleMidiCC(ccNumber, value) {
-    let normalizedValue = value / 127.0;
+    let normalizedValue = value / 127.0;
 
-    if (ccNumber === JOYSTICK_CC_X) {
-        let diffX = value - JOYSTICK_CENTER_VALUE;
-        joystickSpeedX = (Math.abs(diffX) < 5) ? 0 : (diffX / (127 - JOYSTICK_CENTER_VALUE)) * 5 * JOYSTICK_SENSITIVITY * 10;
-        return;
-    }
-    if (ccNumber === JOYSTICK_CC_Y) {
-        let diffY = value - JOYSTICK_CENTER_VALUE;
-        joystickSpeedY = (Math.abs(diffY) < 5) ? 0 : (diffY / (127 - JOYSTICK_CENTER_VALUE)) * -5 * JOYSTICK_SENSITIVITY * 10;
-        return;
-    }
-    if (ccNumber === GLOBAL_SCALE_CC) { // Adicionado para escala global
-        globalScaleMidiValue = value;
-        updateGlobalScale();
-    } else if (ccNumber === 4) {
-        svgRotationMidiValue = value;
-        updateSvgRotationSpeed();
-    } else if (ccNumber === 16) {
-        tamanhoFonteDesejado = map(normalizedValue, 0, 1, TAM_FONTE_DESEJADO_MIN_MIDI, TAM_FONTE_DESEJADO_MAX_MIDI);
-        if (tamanhoFonteDesejado < 8) tamanhoFonteDesejado = 8;
-        ajustarTamanhoEElementos();
-    } else if (ccNumber === 17) {
-        fatorEntrelinha = map(normalizedValue, 0, 1, FATOR_ENTRELINHA_MIN_MIDI, FATOR_ENTRELINHA_MAX_MIDI);
-        ajustarTamanhoEElementos();
-    } else if (ccNumber === 18) {
-        minAxisControlado = Math.min(normalizedValue, maxAxisControlado);
-    } else if (ccNumber === 19) {
-        maxAxisControlado = Math.max(normalizedValue, minAxisControlado);
-    } else if (ccNumber === 20) {
-        velocidadeOnda = map(normalizedValue, 0, 1, VELOCIDADE_ONDA_MIN_MIDI, VELOCIDADE_ONDA_MAX_MIDI);
-    } else if (ccNumber === 21) {
-        textOpacity = normalizedValue;
-        if (textContainerDOMElement && !isImageSceneActive) {
-            textContainerDOMElement.style.opacity = textOpacity;
-        }
-    } else if (ccNumber >= 5 && ccNumber <= 7) {
-        bgColor[ccNumber - 5] = Math.round(map(normalizedValue, 0, 1, 0, 255));
-    } else if (ccNumber >= 1 && ccNumber <= 3) {
-        textColor[ccNumber - 1] = Math.round(map(normalizedValue, 0, 1, 0, 255));
-        if (!isImageSceneActive) aplicarCorTextoAtual();
-    }
+    if (ccNumber === JOYSTICK_CC_X) {
+        let diffX = value - JOYSTICK_CENTER_VALUE;
+        joystickSpeedX = (Math.abs(diffX) < 5) ? 0 : (diffX / (127 - JOYSTICK_CENTER_VALUE)) * 5 * JOYSTICK_SENSITIVITY * 10;
+        return;
+    }
+    if (ccNumber === JOYSTICK_CC_Y) {
+        let diffY = value - JOYSTICK_CENTER_VALUE;
+        joystickSpeedY = (Math.abs(diffY) < 5) ? 0 : (diffY / (127 - JOYSTICK_CENTER_VALUE)) * -5 * JOYSTICK_SENSITIVITY * 10;
+        return;
+    }
+    if (ccNumber === GLOBAL_SCALE_CC) { // Adicionado para escala global
+        globalScaleMidiValue = value;
+        updateGlobalScale();
+    } else if (ccNumber === 4) {
+        svgRotationMidiValue = value;
+        updateSvgRotationSpeed();
+    } else if (ccNumber === 16) {
+        tamanhoFonteDesejado = map(normalizedValue, 0, 1, TAM_FONTE_DESEJADO_MIN_MIDI, TAM_FONTE_DESEJADO_MAX_MIDI);
+        if (tamanhoFonteDesejado < 8) tamanhoFonteDesejado = 8;
+        ajustarTamanhoEElementos();
+    } else if (ccNumber === 17) {
+        fatorEntrelinha = map(normalizedValue, 0, 1, FATOR_ENTRELINHA_MIN_MIDI, FATOR_ENTRELINHA_MAX_MIDI);
+        ajustarTamanhoEElementos();
+    } else if (ccNumber === 18) {
+        minAxisControlado = Math.min(normalizedValue, maxAxisControlado);
+    } else if (ccNumber === 19) {
+        maxAxisControlado = Math.max(normalizedValue, minAxisControlado);
+    } else if (ccNumber === 20) {
+        velocidadeOnda = map(normalizedValue, 0, 1, VELOCIDADE_ONDA_MIN_MIDI, VELOCIDADE_ONDA_MAX_MIDI);
+    } else if (ccNumber === 21) {
+        textOpacity = normalizedValue;
+        if (textContainerDOMElement && !isImageSceneActive) {
+            textContainerDOMElement.style.opacity = textOpacity;
+        }
+    } else if (ccNumber >= 5 && ccNumber <= 7) {
+        bgColor[ccNumber - 5] = Math.round(map(normalizedValue, 0, 1, 0, 255));
+    } else if (ccNumber >= 1 && ccNumber <= 3) {
+        textColor[ccNumber - 1] = Math.round(map(normalizedValue, 0, 1, 0, 255));
+        if (!isImageSceneActive) aplicarCorTextoAtual();
+    }
 }
 
 // =====================================================================================
 // # FUNÇÃO DRAW
 // =====================================================================================
 function draw() {
-    document.body.style.backgroundColor = `rgb(${bgColor.join(',')})`;
+    document.body.style.backgroundColor = `rgb(${bgColor.join(',')})`;
 
-    let graves = 0;
-    let agudos = 0;
+    let graves = 0;
+    let agudos = 0;
 
-    if (isAudioMotionActive && audioReady && analyser && dataArray) {
-        analyser.getByteFrequencyData(dataArray);
-        // Calcula a média dos graves (primeiros 10% dos bins)
-        let gravesSum = 0;
-        const gravesEndIndex = Math.floor(analyser.frequencyBinCount * 0.1);
-        for (let k = 0; k < gravesEndIndex; k++) {
-            gravesSum += dataArray[k];
-        }
-        graves = gravesSum / Math.max(1, gravesEndIndex);
+    if (isAudioMotionActive && audioReady && analyser && dataArray) {
+        analyser.getByteFrequencyData(dataArray);
+        // Calcula a média dos graves (primeiros 10% dos bins)
+        let gravesSum = 0;
+        const gravesEndIndex = Math.floor(analyser.frequencyBinCount * 0.1);
+        for (let k = 0; k < gravesEndIndex; k++) {
+            gravesSum += dataArray[k];
+        }
+        graves = gravesSum / Math.max(1, gravesEndIndex);
 
-        // Calcula a média dos agudos (últimos 50% dos bins)
-        let agudosSum = 0;
-        const agudosStartIndex = Math.floor(analyser.frequencyBinCount * 0.5);
-        for (let k = agudosStartIndex; k < analyser.frequencyBinCount; k++) {
-            agudosSum += dataArray[k];
-        }
-        agudos = agudosSum / Math.max(1, (analyser.frequencyBinCount - agudosStartIndex));
-    }
+        // Calcula a média dos agudos (últimos 50% dos bins)
+        let agudosSum = 0;
+        const agudosStartIndex = Math.floor(analyser.frequencyBinCount * 0.5);
+        for (let k = agudosStartIndex; k < analyser.frequencyBinCount; k++) {
+            agudosSum += dataArray[k];
+        }
+        agudos = agudosSum / Math.max(1, (analyser.frequencyBinCount - agudosStartIndex));
+    }
 
 
-    if (!isImageSceneActive && textContainerDOMElement) {
-        textPosX += joystickSpeedX;
-        textPosY += joystickSpeedY;
-        // Correção: Usar window.innerWidth e window.innerHeight
-        let maxX = window.innerWidth * MAX_TEXT_OFFSET_X_PERCENT;
-        let maxY = window.innerHeight * MAX_TEXT_OFFSET_Y_PERCENT;
-        textPosX = constrain(textPosX, -maxX, maxX);
-        textPosY = constrain(textPosY, -maxY, maxY);
-        textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
+    if (!isImageSceneActive && textContainerDOMElement) {
+        textPosX += joystickSpeedX;
+        textPosY += joystickSpeedY;
+        // Correção: Usar window.innerWidth e window.innerHeight
+        let maxX = window.innerWidth * MAX_TEXT_OFFSET_X_PERCENT;
+        let maxY = window.innerHeight * MAX_TEXT_OFFSET_Y_PERCENT;
+        textPosX = constrain(textPosX, -maxX, maxX);
+        textPosY = constrain(textPosY, -maxY, maxY);
+        textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
 
-        if (spansDasLinhas && spansDasLinhas.length > 0 && currentFontConfig) {
-            for (let i = 0; i < spansDasLinhas.length; i++) {
-                if (spansDasLinhas[i] && spansDasLinhas[i].length > 0) {
-                    for (let j = 0; j < spansDasLinhas[i].length; j++) {
-                        let span = spansDasLinhas[i][j];
-                        if (!span || !span.elt) continue;
+        if (spansDasLinhas && spansDasLinhas.length > 0 && currentFontConfig) {
+            for (let i = 0; i < spansDasLinhas.length; i++) {
+                if (spansDasLinhas[i] && spansDasLinhas[i].length > 0) {
+                    for (let j = 0; j < spansDasLinhas[i].length; j++) {
+                        let span = spansDasLinhas[i][j];
+                        if (!span || !span.elt) continue;
 
-                        let fvsSettingsMap = new Map();
+                        let fvsSettingsMap = new Map();
 
-                        if (currentFontConfig.fixedAxes) {
-                            currentFontConfig.fixedAxes.forEach(axis => fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${axis.value}`));
-                        }
+                        if (currentFontConfig.fixedAxes) {
+                            currentFontConfig.fixedAxes.forEach(axis => fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${axis.value}`));
+                        }
 
-                        if (isAudioMotionActive) {
-                            const wghtAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'wght');
-                            if (wghtAxis) {
-                                let wght = map(graves, 0, 255, wghtAxis.min, wghtAxis.max); // Usar graves para 'wght'
-                                wght = constrain(wght, wghtAxis.min, wghtAxis.max);
-                                fvsSettingsMap.set('wght', `'wght' ${wght.toFixed(0)}`);
-                            }
+                        if (isAudioMotionActive) {
+                            const wghtAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'wght');
+                            if (wghtAxis) {
+                                let wght = map(graves, 0, 255, wghtAxis.min, wghtAxis.max); // Usar graves para 'wght'
+                                wght = constrain(wght, wghtAxis.min, wghtAxis.max);
+                                fvsSettingsMap.set('wght', `'wght' ${wght.toFixed(0)}`);
+                            }
 
-                            const opszAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'opsz');
-                            if (opszAxis) {
-                                let opsz = map(agudos, 0, 255, opszAxis.min, opszAxis.max); // Usar agudos para 'opsz'
-                                opsz = constrain(opsz, opszAxis.min, opszAxis.max);
-                                fvsSettingsMap.set('opsz', `'opsz' ${opsz.toFixed(0)}`);
-                            }
-                            
-                            const wdthAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'wdth');
-                            if (wdthAxis) {
-                                let wdth = map(agudos, 0, 255, wdthAxis.min, wdthAxis.max); // Usar agudos para 'wdth'
-                                wdth = constrain(wdth, wdthAxis.min, wdthAxis.max);
-                                fvsSettingsMap.set('wdth', `'wdth' ${wdth.toFixed(0)}`);
-                            }
+                            const opszAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'opsz');
+                            if (opszAxis) {
+                                let opsz = map(agudos, 0, 255, opszAxis.min, opszAxis.max); // Usar agudos para 'opsz'
+                                opsz = constrain(opsz, opszAxis.min, opszAxis.max);
+                                fvsSettingsMap.set('opsz', `'opsz' ${opsz.toFixed(0)}`);
+                            }
+                            
+                            const wdthAxis = currentFontConfig.animatedAxes.find(a => a.tag === 'wdth');
+                            if (wdthAxis) {
+                                // Aplicar offsets para diminuir o intervalo do 'wdth' no modo áudio
+                                let audioWdthMin = wdthAxis.min + AUDIO_WDTH_MIN_OFFSET;
+                                let audioWdthMax = wdthAxis.max + AUDIO_WDTH_MAX_OFFSET;
 
-                        } else if (isWaveAnimationActive && currentFontConfig.animatedAxes) {
-                            const fatorOndaChar = (sin(anguloOnda + j * 0.7 + i * 0.5) + 1) / 2;
-                            currentFontConfig.animatedAxes.forEach(axis => {
-                                const absMin = axis.min, absMax = axis.max;
-                                let animMin, animMax, axisVal;
-                                if (axis.useGlobalAxisRanges) {
-                                    const range = absMax - absMin;
-                                    animMin = absMin + (minAxisControlado * range);
-                                    animMax = absMin + (maxAxisControlado * range);
-                                } else { animMin = absMin; animMax = absMax; }
-                                if (animMin > animMax) [animMin, animMax] = [animMax, animMin];
-                                axisVal = lerp(animMin, animMax, fatorOndaChar);
-                                fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${axisVal.toFixed(0)}`);
-                            });
-                        } else { // Se nem áudio nem wave, aplicar valores médios ou padrão para eixos animados
-                            if (currentFontConfig.animatedAxes) {
-                                currentFontConfig.animatedAxes.forEach(axis => {
-                                    if (!fvsSettingsMap.has(axis.tag)) { // Só se não foi definido por áudio ou eixo fixo
-                                        const midVal = (axis.min + axis.max) / 2;
-                                        fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${midVal.toFixed(0)}`);
-                                    }
-                                });
-                            }
-                        }
+                                // Garantir que o novo mínimo não seja maior que o novo máximo
+                                if (audioWdthMin > audioWdthMax) {
+                                    [audioWdthMin, audioWdthMax] = [audioWdthMax, audioWdthMin];
+                                }
 
-                        let fvsString = Array.from(fvsSettingsMap.values()).join(', ');
-                        span.style('font-variation-settings', fvsString ? fvsString : 'normal');
-                    }
-                }
-            }
-        }
-        if (isWaveAnimationActive && !isAudioMotionActive) anguloOnda += velocidadeOnda; // Só avança a onda se ela estiver visível
-    }
-    // Chamada de updateMidiStatusBoxContent foi movida para onMIDIMessage
-    // para evitar atualizações excessivas no draw loop.
-    // Se precisar de algo do draw loop no status box, pode ser necessário repensar.
+                                let wdth = map(agudos, 0, 255, audioWdthMin, audioWdthMax); // Usar agudos para 'wdth' com novo intervalo
+                                wdth = constrain(wdth, audioWdthMin, audioWdthMax);
+                                fvsSettingsMap.set('wdth', `'wdth' ${wdth.toFixed(0)}`);
+                            }
+
+                        } else if (isWaveAnimationActive && currentFontConfig.animatedAxes) {
+                            const fatorOndaChar = (sin(anguloOnda + j * 0.7 + i * 0.5) + 1) / 2;
+                            currentFontConfig.animatedAxes.forEach(axis => {
+                                const absMin = axis.min, absMax = axis.max;
+                                let animMin, animMax, axisVal;
+                                if (axis.useGlobalAxisRanges) {
+                                    const range = absMax - absMin;
+                                    animMin = absMin + (minAxisControlado * range);
+                                    animMax = absMin + (maxAxisControlado * range);
+                                } else { animMin = absMin; animMax = absMax; }
+                                if (animMin > animMax) [animMin, animMax] = [animMax, animMin];
+                                axisVal = lerp(animMin, animMax, fatorOndaChar);
+                                fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${axisVal.toFixed(0)}`);
+                            });
+                        } else { // Se nem áudio nem wave, aplicar valores médios ou padrão para eixos animados
+                            if (currentFontConfig.animatedAxes) {
+                                currentFontConfig.animatedAxes.forEach(axis => {
+                                    if (!fvsSettingsMap.has(axis.tag)) { // Só se não foi definido por áudio ou eixo fixo
+                                        const midVal = (axis.min + axis.max) / 2;
+                                        fvsSettingsMap.set(axis.tag, `'${axis.tag}' ${midVal.toFixed(0)}`);
+                                    }
+                                });
+                            }
+                        }
+
+                        let fvsString = Array.from(fvsSettingsMap.values()).join(', ');
+                        span.style('font-variation-settings', fvsString ? fvsString : 'normal');
+                    }
+                }
+            }
+        }
+        if (isWaveAnimationActive && !isAudioMotionActive) anguloOnda += velocidadeOnda; // Só avança a onda se ela estiver visível
+    }
+    // Chamada de updateMidiStatusBoxContent foi movida para onMIDIMessage
+    // para evitar atualizações excessivas no draw loop.
+    // Se precisar de algo do draw loop no status box, pode ser necessário repensar.
 }
 
 // =====================================================================================
 // # FUNÇÕES DE EVENTOS DO NAVEGADOR
 // =====================================================================================
 function windowResized() {
-    if (!setupCompleto) return;
-    console.log("Janela redimensionada.");
-    if (!isImageSceneActive) {
-        textPosX = 0; textPosY = 0; joystickSpeedX = 0; joystickSpeedY = 0;
-        if(textContainerDOMElement) {
-            textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
-            // A opacidade é controlada por textOpacity, não precisa resetar aqui a menos que seja a intenção
-            // textContainerDOMElement.style.opacity = textOpacity;
-        }
-        ajustarTamanhoEElementos();
-    }
-    updateMidiStatusBoxContent(); // Atualiza o status box em caso de redimensionamento
+    if (!setupCompleto) return;
+    console.log("Janela redimensionada.");
+    if (!isImageSceneActive) {
+        textPosX = 0; textPosY = 0; joystickSpeedX = 0; joystickSpeedY = 0;
+        if(textContainerDOMElement) {
+            textContainerDOMElement.style.transform = `translate(${textPosX}px, ${textPosY}px)`;
+            // A opacidade é controlada por textOpacity, não precisa resetar aqui a menos que seja a intenção
+            // textContainerDOMElement.style.opacity = textOpacity;
+        }
+        ajustarTamanhoEElementos();
+    }
+    updateMidiStatusBoxContent(); // Atualiza o status box em caso de redimensionamento
 }
